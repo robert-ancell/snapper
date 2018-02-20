@@ -22,7 +22,8 @@ public class AppWindow : Gtk.ApplicationWindow
         try {
             var snaps = client.list_sync ();
             for (var i = 0; i < snaps.length; i++) {
-                var row = new AppRow (snaps[i].title);
+                var snap = snaps[i];
+                var row = new AppRow (snap.title, snap.developer);
                 row.visible = true;
                 app_list.add (row);
             }

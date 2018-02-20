@@ -10,10 +10,21 @@
 
 public class AppRow : Gtk.ListBoxRow
 {
-    public AppRow (string title)
+    public AppRow (string title, string developer)
     {
+        var box = new Gtk.Box (Gtk.Orientation.VERTICAL, 6);
+        box.visible = true;
+        add (box);
+
         var title_label = new Gtk.Label (title);
         title_label.visible = true;
-        add (title_label);
+        var attributes = new Pango.AttrList ();
+        attributes.insert (Pango.attr_weight_new (Pango.Weight.BOLD));
+        title_label.attributes = attributes;
+        box.pack_start (title_label, false, false, 0);
+
+        var developer_label = new Gtk.Label (developer);
+        developer_label.visible = true;
+        box.pack_start (developer_label, false, false, 0);
     }
 }
