@@ -16,22 +16,9 @@ public class AppRow : Gtk.ListBoxRow
         hbox.visible = true;
         add (hbox);
 
-        var icon_image = new Gtk.Image ();
+        var icon_image = new LazyIcon (icon);
         icon_image.visible = true;
         hbox.pack_start (icon_image, false, false, 0);
-        if (icon != null) {
-            var session = new Soup.Session ();
-            var message = new Soup.Message ("GET", icon);
-            try {
-                var stream = session.send (message);
-                var pixbuf = new Gdk.Pixbuf.from_stream_at_scale (stream, 64, 64, true);
-                icon_image.set_from_pixbuf (pixbuf);
-            }
-            catch (Error e) {
-                warning ("Failed to download icon: %s", icon);
-            }
-        }
-        stderr.printf ("icon=%s\n", icon);
 
         var box = new Gtk.Box (Gtk.Orientation.VERTICAL, 6);
         box.visible = true;
