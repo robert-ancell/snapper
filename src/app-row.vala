@@ -10,11 +10,32 @@
 
 public class AppRow : Gtk.ListBoxRow
 {
-    public AppRow (string title, string developer)
+    public AppRow (string title, string developer, string? icon)
     {
+        var hbox = new Gtk.Box (Gtk.Orientation.HORIZONTAL, 6);
+        hbox.visible = true;
+        add (hbox);
+
+        var icon_image = new Gtk.Image ();
+        icon_image.visible = true;
+        hbox.pack_start (icon_image, false, false, 0);
+        if (icon != null) {
+            var session = new Soup.Session ();
+            var message = new Soup.Message ("GET", icon);
+            try {
+                var stream = session.send (message);
+                var pixbuf = new Gdk.Pixbuf.from_stream_at_scale (stream, 64, 64, true);
+                icon_image.set_from_pixbuf (pixbuf);
+            }
+            catch (Error e) {
+                warning ("Failed to download icon: %s", icon);
+            }
+        }
+        stderr.printf ("icon=%s\n", icon);
+
         var box = new Gtk.Box (Gtk.Orientation.VERTICAL, 6);
         box.visible = true;
-        add (box);
+        hbox.pack_start (box, true, true, 0);
 
         var title_label = new Gtk.Label (title);
         title_label.visible = true;

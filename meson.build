@@ -14,8 +14,9 @@ i18n = import ('i18n')
 localedir = join_paths (get_option ('prefix'), get_option ('localedir'))
 
 # Dependencies
-glib_dep = dependency ('glib-2.0')
+gdk_pixbuf_dep = dependency ('gdk-pixbuf-2.0')
 gtk_dep = dependency ('gtk+-3.0')
+libsoup_dep = dependency ('libsoup-2.4')
 snapd_glib_dep = dependency ('snapd-glib')
 
 subdir ('src')
