@@ -1,5 +1,7 @@
 snapper = executable ('snapper',
                       [ 'config.vapi',
+                        'app-window.vala',
+                        'app-row.vala',
                         'snapper.vala' ],
                       dependencies: [ gtk_dep, snapd_glib_dep ],
                       vala_args: [ '--pkg=posix' ],

@@ -11,19 +11,15 @@
 public class Snapper : Gtk.Application
 {
     static bool show_version;
-    static bool debug_enabled;
     public const OptionEntry[] options =
     {
         { "version", 'v', 0, OptionArg.NONE, ref show_version,
           /* Help string for command line --version flag */
           N_("Show release version"), null},
-        { "debug", 'd', 0, OptionArg.NONE, ref debug_enabled,
-          /* Help string for command line --debug flag */
-          N_("Print debugging messages"), null},
         { null }
     };
 
-    private Gtk.ApplicationWindow app;
+    private AppWindow window;
 
     public Snapper ()
     {
@@ -34,19 +30,20 @@ public class Snapper : Gtk.Application
     public override void startup ()
     {
         base.startup ();
-        app = new Gtk.ApplicationWindow (this);
+        window = new AppWindow ();
+        add_window (window);
     }
 
     public override void activate ()
     {
         base.activate ();
-        app.show ();
+        window.show ();
     }
 
     public override void shutdown ()
     {
         base.shutdown ();
-        app = null;
+        window = null;
     }
 
     public static int main (string[] args)
