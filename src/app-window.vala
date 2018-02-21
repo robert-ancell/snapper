@@ -120,6 +120,32 @@ public class AppWindow : Gtk.ApplicationWindow
         catch (Error e) {
             warning ("Failed to get installed snaps: %s", e.message);
         }
+
+        var pool = new AppStream.Pool ();
+        pool.load ();
+        var components = pool.get_components ();
+
+        var pk_client = new Pk.Client ();
+        try {
+            var filter = Pk.Bitfield.from_enums (Pk.Filter.INSTALLED);
+            var results = pk_client.get_packages (filter, null, () => {});
+            if (results.get_error_code () == null) {
+                var packages = results.get_package_array ();
+                for (var i = 0; i < packages.length; i++) {
+                    var package = packages[i];
+                    for (var j = 0; j < components.length; j++) {
+                        var component = components[j];
+                        if (component.get_pkgname () == package.get_name ()) {
+                            stderr.printf ("+%s\n", package.get_name ());
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        catch (Error e) {
+            warning ("Failed to get installed packages: %s", e.message);
+        }
     }
 
     public void show_installed ()
