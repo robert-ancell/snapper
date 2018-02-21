@@ -15,6 +15,7 @@ public class AppWindow : Gtk.ApplicationWindow
     private Gtk.Button search_button;
     private Gtk.ListBox app_list;
     private Gtk.SearchEntry search_entry;
+    private Cancellable? search_cancellable;
     private Gtk.ListBox search_list;
     private LazyIcon icon_image;
     private Gtk.Label title_label;
@@ -141,11 +142,14 @@ public class AppWindow : Gtk.ApplicationWindow
 
     private async void do_search (string text)
     {
+        if (search_cancellable != null)
+            search_cancellable.cancel ();
+        search_cancellable = new Cancellable ();
         search_list.forall ((element) => search_list.remove (element));
         var client = new Snapd.Client ();
         try {
             string suggested_currency;
-            var snaps = yield client.find_async (Snapd.FindFlags.NONE, text, null, out suggested_currency);
+            var snaps = yield client.find_async (Snapd.FindFlags.NONE, text, search_cancellable, out suggested_currency);
             for (var i = 0; i < snaps.length; i++) {
                 var app = new App (null, snaps[i]);
                 var row = new AppRow (app);
