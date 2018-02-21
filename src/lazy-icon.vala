@@ -12,11 +12,17 @@ public class LazyIcon : Gtk.Image {
     private string url_;
     public string url {
         get { return url_; }
-        set { url_ = value; set_from_icon_name ("package", Gtk.IconSize.DIALOG); load.begin (); }
+        set {
+            if (url_ == value)
+                return;
+            url_ = value;
+            set_from_icon_name ("package", Gtk.IconSize.DIALOG);
+            load.begin ();
+        }
     }
 
     public LazyIcon () {
-        url = null;
+        set_from_icon_name ("package", Gtk.IconSize.DIALOG);
     }
     
     private async void load ()
