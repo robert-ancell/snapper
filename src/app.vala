@@ -62,11 +62,21 @@ public class App : Object
 
     public signal void changed ();
 
-    private Snapd.Snap local_snap;
+    private Snapd.Snap? local_snap;
     private Snapd.Snap? store_snap;    
 
-    public App (Snapd.Snap local_snap, Snapd.Snap? store_snap)
+    public App (Snapd.Snap? local_snap, Snapd.Snap? store_snap)
     {
+        if (local_snap == null) {
+            var client = new Snapd.Client ();
+            try {
+                local_snap = client.list_one_sync (store_snap.name);
+            }
+            catch (Error e) {
+                warning ("Failed to get installed state for snap %s: %s", store_snap.name, e.message);
+            }
+        }
+
         this.local_snap = local_snap;
         this.store_snap = store_snap;
         if (store_snap == null)

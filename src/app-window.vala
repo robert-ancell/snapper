@@ -12,7 +12,10 @@ public class AppWindow : Gtk.ApplicationWindow
 {
     private Gtk.Stack stack;
     private Gtk.Button back_button;
+    private Gtk.Button search_button;
     private Gtk.ListBox app_list;
+    private Gtk.SearchEntry search_entry;
+    private Gtk.ListBox search_list;
     private LazyIcon icon_image;
     private Gtk.Label title_label;
     private Gtk.Label summary_label;
@@ -27,9 +30,13 @@ public class AppWindow : Gtk.ApplicationWindow
         set_titlebar (header_bar);
 
         back_button = new Gtk.Button.from_icon_name ("back");
-        back_button.visible = true;
-        back_button.clicked.connect (() => { stack.set_visible_child_name ("installed"); });
+        back_button.clicked.connect (() => { show_installed (); });
         header_bar.pack_start (back_button);
+
+        search_button = new Gtk.Button.from_icon_name ("search");
+        search_button.visible = true;
+        search_button.clicked.connect (() => { show_search (); });
+        header_bar.pack_end (search_button);
 
         stack = new Gtk.Stack ();
         stack.visible = true;
@@ -40,6 +47,21 @@ public class AppWindow : Gtk.ApplicationWindow
         app_list.activate_on_single_click = true;
         app_list.row_activated.connect ((row) => { show_details (((AppRow) row).app); });
         stack.add_named (app_list, "installed");
+
+        var box = new Gtk.Box (Gtk.Orientation.VERTICAL, 0);
+        box.visible = true;
+        stack.add_named (box, "search");
+
+        search_entry = new Gtk.SearchEntry ();
+        search_entry.visible = true;
+        search_entry.search_changed.connect (() => { do_search.begin (search_entry.text); });
+        box.pack_start (search_entry, false, false, 0);
+
+        search_list = new Gtk.ListBox ();
+        search_list.visible = true;
+        search_list.activate_on_single_click = true;
+        search_list.row_activated.connect ((row) => { show_details (((AppRow) row).app); });
+        box.pack_start (search_list, true, true, 0);
 
         var grid = new Gtk.Grid ();
         grid.visible = true;
@@ -81,12 +103,48 @@ public class AppWindow : Gtk.ApplicationWindow
         }
     }
 
+    public void show_installed ()
+    {
+        back_button.visible = false;
+        search_button.visible = true;
+        stack.set_visible_child_name ("installed");
+    }
+
     public void show_details (App app)
     {
+        back_button.visible = true;
+        search_button.visible = false;
         title_label.label = app.title;
         summary_label.label = app.summary;
         description_label.label = app.description;
         icon_image.url = app.icon_url;
         stack.set_visible_child_name ("details");
+    }
+
+    public void show_search ()
+    {
+        back_button.visible = true;
+        stack.set_visible_child_name ("search");
+        search_entry.grab_focus ();
+    }
+
+    private async void do_search (string text)
+    {
+        search_list.forall ((element) => search_list.remove (element));
+        var client = new Snapd.Client ();
+        try {
+            string suggested_currency;
+            var snaps = yield client.find_async (Snapd.FindFlags.NONE, text, null, out suggested_currency);
+            for (var i = 0; i < snaps.length; i++) {
+                var app = new App (null, snaps[i]);
+                var row = new AppRow (app);
+                row.visible = true;
+                search_list.add (row);
+            }
+        }
+        catch (Error e)
+        {
+            warning ("Failed to search: %s\n", e.message);
+        }
     }
 }
