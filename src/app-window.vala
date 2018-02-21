@@ -26,6 +26,8 @@ public class AppWindow : Gtk.ApplicationWindow
 
     public AppWindow ()
     {
+        set_size_request (400, 600);
+
         var header_bar = new Gtk.HeaderBar ();
         header_bar.visible = true;
         header_bar.title = _("Snapper");
@@ -121,10 +123,29 @@ public class AppWindow : Gtk.ApplicationWindow
             warning ("Failed to get installed snaps: %s", e.message);
         }
 
-        var pool = new AppStream.Pool ();
-        pool.load ();
-        var components = pool.get_components ();
+        load_appstream.begin ();
+    }
 
+    private async void load_appstream ()
+    {
+        var pool = new AppStream.Pool ();
+
+        SourceFunc callback = load_appstream.callback;
+        ThreadFunc<void*> run = () => {
+            try {
+                pool.load ();
+            }
+            catch (Error e) {
+                warning ("Failed to load appstream pool: %s", e.message); // FIXME: probably not safe to do in a thread
+            }
+            Idle.add ((owned) callback);
+            return null;
+        };
+        new Thread<void*> (null, run);
+
+        yield;
+
+        var components = pool.get_components ();
         var pk_client = new Pk.Client ();
         try {
             var filter = Pk.Bitfield.from_enums (Pk.Filter.INSTALLED);
