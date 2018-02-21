@@ -9,14 +9,14 @@
  */
 
 public class LazyIcon : Gtk.Image {
-    public LazyIcon () {
-        this.url = url;
-    }
-
     private string url_;
     public string url {
         get { return url_; }
-        set { url_ = value; load.begin (); }
+        set { url_ = value; set_from_icon_name ("package", Gtk.IconSize.DIALOG); load.begin (); }
+    }
+
+    public LazyIcon () {
+        url = null;
     }
     
     private async void load ()
@@ -28,7 +28,9 @@ public class LazyIcon : Gtk.Image {
         var message = new Soup.Message ("GET", url);
         try {
             var stream = yield session.send_async (message);
-            var pixbuf = yield new Gdk.Pixbuf.from_stream_at_scale_async (stream, 64, 64, true);
+            int width, height;
+            Gtk.icon_size_lookup (Gtk.IconSize.DIALOG, out width, out height);
+            var pixbuf = yield new Gdk.Pixbuf.from_stream_at_scale_async (stream, width, height, true);
             set_from_pixbuf (pixbuf);
         }
         catch (Error e) {
