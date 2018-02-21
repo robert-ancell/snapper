@@ -111,7 +111,7 @@ public class AppWindow : Gtk.ApplicationWindow
         try {
             var snaps = client.list_sync ();
             for (var i = 0; i < snaps.length; i++) {
-                var app = new App (snaps[i], null);
+                var app = new SnapApp (snaps[i], null);
                 var row = new AppRow (app);
                 row.visible = true;
                 app_list.add (row);
@@ -205,7 +205,7 @@ public class AppWindow : Gtk.ApplicationWindow
             string suggested_currency;
             var snaps = yield client.find_async (Snapd.FindFlags.NONE, text, search_cancellable, out suggested_currency);
             for (var i = 0; i < snaps.length; i++) {
-                var app = new App (null, snaps[i]);
+                var app = new SnapApp (null, snaps[i]);
                 var row = new AppRow (app);
                 row.visible = true;
                 search_list.add (row);
