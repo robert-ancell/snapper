@@ -42,11 +42,16 @@ public class AppWindow : Gtk.ApplicationWindow
         stack.visible = true;
         add (stack);
 
+        var installed_scroll = new Gtk.ScrolledWindow (null, null);
+        installed_scroll.visible = true;
+        installed_scroll.set_policy (Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC);
+        stack.add_named (installed_scroll, "installed");
+
         app_list = new Gtk.ListBox ();
         app_list.visible = true;
         app_list.activate_on_single_click = true;
         app_list.row_activated.connect ((row) => { show_details (((AppRow) row).app); });
-        stack.add_named (app_list, "installed");
+        installed_scroll.add (app_list);
 
         var box = new Gtk.Box (Gtk.Orientation.VERTICAL, 0);
         box.visible = true;
@@ -57,11 +62,16 @@ public class AppWindow : Gtk.ApplicationWindow
         search_entry.search_changed.connect (() => { do_search.begin (search_entry.text); });
         box.pack_start (search_entry, false, false, 0);
 
+        var search_scroll = new Gtk.ScrolledWindow (null, null);
+        search_scroll.visible = true;
+        search_scroll.set_policy (Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC);
+        box.pack_start (search_scroll, true, true, 0);
+
         search_list = new Gtk.ListBox ();
         search_list.visible = true;
         search_list.activate_on_single_click = true;
         search_list.row_activated.connect ((row) => { show_details (((AppRow) row).app); });
-        box.pack_start (search_list, true, true, 0);
+        search_scroll.add (search_list);
 
         var grid = new Gtk.Grid ();
         grid.visible = true;
@@ -100,6 +110,7 @@ public class AppWindow : Gtk.ApplicationWindow
             }
         }
         catch (Error e) {
+            warning ("Failed to get installed snaps: %s", e.message);
         }
     }
 
