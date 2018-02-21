@@ -17,7 +17,7 @@ public class AppWindow : Gtk.ApplicationWindow
     private Gtk.SearchEntry search_entry;
     private Cancellable? search_cancellable;
     private Gtk.ListBox search_list;
-    private LazyIcon icon_image;
+    private AsyncImage icon_image;
     private Gtk.Label title_label;
     private Gtk.Label summary_label;
     private Gtk.Button install_button;
@@ -80,7 +80,7 @@ public class AppWindow : Gtk.ApplicationWindow
         grid.visible = true;
         stack.add_named (grid, "details");
 
-        icon_image = new LazyIcon ();
+        icon_image = new AsyncImage ();
         icon_image.visible = true;
         icon_image.expand = false;
         grid.attach (icon_image, 0, 0, 1, 2);

@@ -8,7 +8,7 @@
  * license.
  */
 
-public class LazyIcon : Gtk.Image {
+public class AsyncImage : Gtk.Image {
     private string url_;
     public string url {
         get { return url_; }
@@ -21,7 +21,7 @@ public class LazyIcon : Gtk.Image {
         }
     }
 
-    public LazyIcon () {
+    public AsyncImage () {
         set_from_icon_name ("package", Gtk.IconSize.DIALOG);
     }
     

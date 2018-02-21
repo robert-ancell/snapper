@@ -11,7 +11,7 @@
 public class AppRow : Gtk.ListBoxRow
 {
     public App app;
-    private LazyIcon icon_image;
+    private AsyncImage icon_image;
     private Gtk.Label title_label;
     private Gtk.Label developer_label;
 
@@ -23,7 +23,7 @@ public class AppRow : Gtk.ListBoxRow
         hbox.visible = true;
         add (hbox);
 
-        icon_image = new LazyIcon ();
+        icon_image = new AsyncImage ();
         icon_image.visible = true;
         hbox.pack_start (icon_image, false, false, 0);
 
