@@ -136,7 +136,10 @@ public class AppWindow : Gtk.ApplicationWindow
                     for (var j = 0; j < components.length; j++) {
                         var component = components[j];
                         if (component.get_pkgname () == package.get_name ()) {
-                            stderr.printf ("+%s\n", package.get_name ());
+                            var app = new PkApp (package, component);
+                            var row = new AppRow (app);
+                            row.visible = true;
+                            app_list.add (row);
                             break;
                         }
                     }
