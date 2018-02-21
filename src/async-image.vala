@@ -30,6 +30,22 @@ public class AsyncImage : Gtk.Image {
         if (url == null)
             return;
 
+        if (url.has_prefix ("file://")) {
+            var filename = url.substring ("file://".length);
+
+            int width, height;
+            Gtk.icon_size_lookup (Gtk.IconSize.DIALOG, out width, out height);
+            try {
+                var pixbuf = new Gdk.Pixbuf.from_file_at_size (filename, width, height);
+                set_from_pixbuf (pixbuf);
+            }
+            catch (Error e) {
+                warning ("Failed to load icon: %s", url);
+            }
+
+            return;
+        }
+
         var session = new Soup.Session ();
         var message = new Soup.Message ("GET", url);
         try {

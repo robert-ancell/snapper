@@ -37,7 +37,10 @@ public class PkApp : App
     }
     public override string? icon_url {
         get {
-            return null;
+            var icons = component.get_icons ();
+            if (icons.length == 0)
+                return null;
+            return icons[0].get_url ();
         }
     }
     public override bool is_installed {
