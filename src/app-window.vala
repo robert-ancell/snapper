@@ -20,7 +20,9 @@ public class AppWindow : Gtk.ApplicationWindow
     private LazyIcon icon_image;
     private Gtk.Label title_label;
     private Gtk.Label summary_label;
+    private Gtk.Button install_button;
     private Gtk.Label description_label;
+    private App? selected_app;
 
     public AppWindow ()
     {
@@ -95,10 +97,15 @@ public class AppWindow : Gtk.ApplicationWindow
         summary_label.visible = true;
         grid.attach (summary_label, 1, 1, 1, 1);
 
+        install_button = new Gtk.Button.with_label (_("Install"));
+        install_button.clicked.connect (() => { install_remove_app.begin (); });
+        install_button.visible = true;
+        grid.attach (install_button, 0, 2, 1, 1);
+
         description_label = new Gtk.Label ("");
         description_label.visible = true;
         description_label.wrap = true;
-        grid.attach (description_label, 0, 2, 2, 1);
+        grid.attach (description_label, 0, 3, 2, 1);
 
         var client = new Snapd.Client ();
         try {
@@ -124,13 +131,34 @@ public class AppWindow : Gtk.ApplicationWindow
 
     public void show_details (App app)
     {
+        selected_app = app;
         back_button.visible = true;
         search_button.visible = false;
-        title_label.label = app.title;
-        summary_label.label = app.summary;
-        description_label.label = app.description;
-        icon_image.url = app.icon_url;
+        selected_app.changed.connect (() => { refresh_selected_metadata (); }); // FIXME: Disconnect when changes
+        refresh_selected_metadata ();
         stack.set_visible_child_name ("details");
+    }
+
+    private void refresh_selected_metadata ()
+    {
+        if (selected_app.is_installed)
+            install_button.label = _("Remove");
+        else
+            install_button.label = _("Install");
+        title_label.label = selected_app.title;
+        summary_label.label = selected_app.summary;
+        description_label.label = selected_app.description;
+        icon_image.url = selected_app.icon_url;
+    }
+
+    public async void install_remove_app ()
+    {
+        install_button.sensitive = false;
+        if (!selected_app.is_installed)
+            yield selected_app.install ();
+        else
+            yield selected_app.remove ();
+        install_button.sensitive = true;
     }
 
     public void show_search ()

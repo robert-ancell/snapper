@@ -59,6 +59,9 @@ public class App : Object
             return null;
         }
     }
+    public bool is_installed {
+        get { return local_snap != null; }
+    }
 
     public signal void changed ();
 
@@ -81,6 +84,42 @@ public class App : Object
         this.store_snap = store_snap;
         if (store_snap == null)
             load_store_metadata.begin (local_snap.name);
+    }
+
+    public async void install (Cancellable? cancellable = null)
+    {
+        var client = new Snapd.Client ();
+        try {
+            yield client.install2_async (Snapd.InstallFlags.NONE, store_snap.name, null, null, () => {}, cancellable);
+        }
+        catch (Error e) {
+            warning ("Failed to install %s: %s", store_snap.name, e.message);
+            return;
+        }
+
+        try {
+            local_snap = client.list_one_sync (store_snap.name);
+        }
+        catch (Error e) {
+            warning ("Failed to get installed state for snap %s: %s", store_snap.name, e.message);
+        }
+
+        changed ();
+    }
+
+    public async void remove (Cancellable? cancellable = null)
+    {
+        var client = new Snapd.Client ();
+        try {
+            yield client.remove_async (local_snap.name, () => {}, cancellable);
+        }
+        catch (Error e) {
+            warning ("Failed to remove %s: %s", store_snap.name, e.message);
+            return;
+        }
+        local_snap = null;
+
+        changed ();
     }
 
     private async void load_store_metadata (string name)
