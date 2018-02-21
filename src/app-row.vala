@@ -10,13 +10,27 @@
 
 public class AppRow : Gtk.ListBoxRow
 {
-    public AppRow (string title, string developer, string? icon)
+    private LazyIcon icon_image;
+    private Gtk.Label title_label;
+    private Gtk.Label developer_label;
+
+    public string title {
+        set { title_label.label = value; }
+    }
+    public string developer {
+        set { developer_label.label = value; }
+    }
+    public string icon_url {
+        set { icon_image.url = value; }
+    }
+
+    public AppRow ()
     {
         var hbox = new Gtk.Box (Gtk.Orientation.HORIZONTAL, 6);
         hbox.visible = true;
         add (hbox);
 
-        var icon_image = new LazyIcon (icon);
+        icon_image = new LazyIcon ();
         icon_image.visible = true;
         hbox.pack_start (icon_image, false, false, 0);
 
@@ -24,14 +38,14 @@ public class AppRow : Gtk.ListBoxRow
         box.visible = true;
         hbox.pack_start (box, true, true, 0);
 
-        var title_label = new Gtk.Label (title);
+        title_label = new Gtk.Label ("");
         title_label.visible = true;
         var attributes = new Pango.AttrList ();
         attributes.insert (Pango.attr_weight_new (Pango.Weight.BOLD));
         title_label.attributes = attributes;
         box.pack_start (title_label, false, false, 0);
 
-        var developer_label = new Gtk.Label (developer);
+        developer_label = new Gtk.Label ("");
         developer_label.visible = true;
         box.pack_start (developer_label, false, false, 0);
     }

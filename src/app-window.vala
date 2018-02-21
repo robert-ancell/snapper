@@ -22,18 +22,7 @@ public class AppWindow : Gtk.ApplicationWindow
         try {
             var snaps = client.list_sync ();
             for (var i = 0; i < snaps.length; i++) {
-                var snap = snaps[i];
-
-                string? icon = null;
-                try {
-                    var store_snaps = client.find_sync (Snapd.FindFlags.MATCH_NAME, snap.name, null);
-                    icon = store_snaps[0].icon;
-                }
-                catch (Error e) {
-                    warning ("Failed to get store info: %s", e.message);
-                }
-
-                var row = new AppRow (snap.title, snap.developer, icon);
+                var row = new AppRowSnap (snaps[i], null);
                 row.visible = true;
                 app_list.add (row);
             }

@@ -9,11 +9,14 @@
  */
 
 public class LazyIcon : Gtk.Image {
-    private string? url;
-
-    public LazyIcon (string? url) {
+    public LazyIcon () {
         this.url = url;
-        load.begin ();
+    }
+
+    private string url_;
+    public string url {
+        get { return url_; }
+        set { url_ = value; load.begin (); }
     }
     
     private async void load ()

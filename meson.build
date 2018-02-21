@@ -17,6 +17,6 @@ localedir = join_paths (get_option ('prefix'), get_option ('localedir'))
 gdk_pixbuf_dep = dependency ('gdk-pixbuf-2.0')
 gtk_dep = dependency ('gtk+-3.0')
 libsoup_dep = dependency ('libsoup-2.4')
-snapd_glib_dep = dependency ('snapd-glib')
+snapd_glib_dep = dependency ('snapd-glib', version: '>= 1.35')
 
 subdir ('src')
