@@ -46,6 +46,9 @@ public class AsyncImage : Gtk.Image {
             return;
         }
 
+        if (!url.has_prefix ("http"))
+            return;
+
         var session = new Soup.Session ();
         var message = new Soup.Message ("GET", url);
         try {
