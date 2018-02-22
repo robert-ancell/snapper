@@ -1,0 +1,65 @@
+name: robert-ancell-snapper
+version: git
+summary: Snapper
+description: |
+  Snapper
+
+grade: devel # must be 'stable' to release into candidate/stable channels
+confinement: devmode
+
+apps:
+  snapper:
+    command: bin/desktop-launch ${SNAP}/usr/bin/snapper
+
+parts:
+  gnome-3-26:
+    plugin: nil
+    prepare: |
+      add-apt-repository -y ppa:ubuntu-desktop/gnome-3-26
+      apt-get -y update
+      apt-get -y dist-upgrade
+  desktop-gtk3:
+    after: [gnome-3-26]
+  snapd-glib:
+    after: [desktop-gtk3]
+    source: https://github.com/snapcore/snapd-glib
+    source-type: git
+    plugin: autotools
+    configflags: [--prefix=/usr, --disable-glibtest]
+    organize:
+      snap/snapper/current/usr: usr
+    build-attributes: ['no-system-libraries']
+    build-packages:
+      - gtk-doc-tools
+      - intltool
+      - libgirepository1.0-dev
+      - libglib2.0-dev
+      - libjson-glib-dev
+      - libpolkit-gobject-1-dev
+      - libsoup2.4-dev
+      - valac
+  snapper:
+    build-attributes: ['no-system-libraries']
+    after: [snapd-glib]
+    source: .
+    source-type: git
+    plugin: meson
+    meson-parameters:
+      - --prefix=/usr
+    organize:
+      snap/snapper/current/usr: usr
+    build-packages:
+      - appstream
+      - appstream-util
+      - intltool
+      - libappstream-dev
+      - libappstream-glib-dev
+      - libglib2.0-dev
+      - libgtk-3-dev
+      - libpackagekit-glib2-dev
+      - libsoup2.4-dev
+    stage-packages:
+      - libappstream-glib8
+      - libsecret-1-0
+      - appstream
+      - packagekit
