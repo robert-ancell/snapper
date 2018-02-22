@@ -46,20 +46,21 @@ public class AsyncImage : Gtk.Image {
             return;
         }
 
-        if (!url.has_prefix ("http"))
-            return;
+        if (url.has_prefix ("http://") || url.has_prefix ("https://")) {
+            var session = new Soup.Session ();
+            var message = new Soup.Message ("GET", url);
+            try {
+                var stream = yield session.send_async (message);
+                int width, height;
+                Gtk.icon_size_lookup (Gtk.IconSize.DIALOG, out width, out height);
+                var pixbuf = yield new Gdk.Pixbuf.from_stream_at_scale_async (stream, width, height, true);
+                set_from_pixbuf (pixbuf);
+            }
+            catch (Error e) {
+                warning ("Failed to download icon: %s", url);
+            }
 
-        var session = new Soup.Session ();
-        var message = new Soup.Message ("GET", url);
-        try {
-            var stream = yield session.send_async (message);
-            int width, height;
-            Gtk.icon_size_lookup (Gtk.IconSize.DIALOG, out width, out height);
-            var pixbuf = yield new Gdk.Pixbuf.from_stream_at_scale_async (stream, width, height, true);
-            set_from_pixbuf (pixbuf);
-        }
-        catch (Error e) {
-            warning ("Failed to download icon: %s", url);
+            return;
         }
     }
 }
