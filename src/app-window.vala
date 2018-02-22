@@ -11,22 +11,21 @@
 public class AppWindow : Gtk.ApplicationWindow
 {
     private Gtk.Stack stack;
+    private Gtk.ToggleButton home_button;
+    private Gtk.ToggleButton installed_button;
     private Gtk.Button back_button;
     private Gtk.Button search_button;
-    private Gtk.ListBox app_list;
-    private Gtk.SearchEntry search_entry;
-    private Cancellable? search_cancellable;
-    private Gtk.ListBox search_list;
-    private AsyncImage icon_image;
-    private Gtk.Label title_label;
-    private Gtk.Label summary_label;
-    private Gtk.Button install_button;
-    private Gtk.Label description_label;
-    private App? selected_app;
+    private HomePage home_page;
+    private InstalledPage installed_page;
+    private DetailsPage details_page;
+    private SearchPage search_page;
+    private Queue<string> page_stack;
 
     public AppWindow ()
     {
-        set_size_request (400, 600);
+        page_stack = new Queue<string> ();
+
+        set_size_request (800, 600);
 
         var header_bar = new Gtk.HeaderBar ();
         header_bar.visible = true;
@@ -34,8 +33,30 @@ public class AppWindow : Gtk.ApplicationWindow
         header_bar.show_close_button = true;
         set_titlebar (header_bar);
 
+        var page_box = new Gtk.ButtonBox (Gtk.Orientation.HORIZONTAL);
+        page_box.visible = true;
+        page_box.homogeneous = true;
+        page_box.get_style_context ().add_class (Gtk.STYLE_CLASS_LINKED);
+        header_bar.set_custom_title (page_box);
+
+        home_button = new Gtk.ToggleButton.with_label ("Home");
+        home_button.visible = true;
+        home_button.active = true;
+        home_button.clicked.connect (() => { if (home_button.active) show_home (); });
+        page_box.pack_start (home_button, false, true, 0);
+
+        installed_button = new Gtk.ToggleButton.with_label ("Installed");
+        installed_button.visible = true;
+        installed_button.clicked.connect (() => { if (installed_button.active) show_installed (); });
+        page_box.pack_start (installed_button, false, true, 0);
+
+        /*updates_button = new Gtk.ToggleButton.with_label ("Updates");
+        updates_button.visible = true;
+        updates_button.clicked.connect (() => { page_stack.clear (); stack.visible_child_name = "updates"; update_state (); });
+        page_box.pack_start (updates_button, false, true, 0);*/
+
         back_button = new Gtk.Button.from_icon_name ("back");
-        back_button.clicked.connect (() => { show_installed (); });
+        back_button.clicked.connect (() => { stack.visible_child_name = page_stack.pop_head (); update_state (); });
         header_bar.pack_start (back_button);
 
         search_button = new Gtk.Button.from_icon_name ("search");
@@ -47,83 +68,55 @@ public class AppWindow : Gtk.ApplicationWindow
         stack.visible = true;
         add (stack);
 
-        var installed_scroll = new Gtk.ScrolledWindow (null, null);
-        installed_scroll.visible = true;
-        installed_scroll.set_policy (Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC);
-        stack.add_named (installed_scroll, "installed");
+        home_page = new HomePage ();
+        home_page.visible = true;
+        home_page.select_app.connect ((app) => { show_details (app); });
+        stack.add_named (home_page, "home");
 
-        app_list = new Gtk.ListBox ();
-        app_list.visible = true;
-        app_list.activate_on_single_click = true;
-        app_list.row_activated.connect ((row) => { show_details (((AppRow) row).app); });
-        installed_scroll.add (app_list);
+        installed_page = new InstalledPage ();
+        installed_page.visible = true;
+        installed_page.select_app.connect ((app) => { show_details (app); });
+        stack.add_named (installed_page, "installed");
 
-        var box = new Gtk.Box (Gtk.Orientation.VERTICAL, 0);
-        box.visible = true;
-        stack.add_named (box, "search");
+        search_page = new SearchPage ();
+        search_page.visible = true;
+        search_page.select_app.connect ((app) => { show_details (app); });
+        stack.add_named (search_page, "search");
 
-        search_entry = new Gtk.SearchEntry ();
-        search_entry.visible = true;
-        search_entry.search_changed.connect (() => { do_search.begin (search_entry.text); });
-        box.pack_start (search_entry, false, false, 0);
-
-        var search_scroll = new Gtk.ScrolledWindow (null, null);
-        search_scroll.visible = true;
-        search_scroll.set_policy (Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC);
-        box.pack_start (search_scroll, true, true, 0);
-
-        search_list = new Gtk.ListBox ();
-        search_list.visible = true;
-        search_list.activate_on_single_click = true;
-        search_list.row_activated.connect ((row) => { show_details (((AppRow) row).app); });
-        search_scroll.add (search_list);
-
-        var grid = new Gtk.Grid ();
-        grid.visible = true;
-        stack.add_named (grid, "details");
-
-        icon_image = new AsyncImage ();
-        icon_image.visible = true;
-        icon_image.expand = false;
-        grid.attach (icon_image, 0, 0, 1, 2);
-
-        title_label = new Gtk.Label ("");
-        title_label.visible = true;
-        title_label.hexpand = true;
-        var attributes = new Pango.AttrList ();
-        attributes.insert (Pango.attr_scale_new (Pango.Scale.LARGE));
-        title_label.attributes = attributes;
-        grid.attach (title_label, 1, 0, 1, 1);
-
-        summary_label = new Gtk.Label ("");
-        summary_label.visible = true;
-        grid.attach (summary_label, 1, 1, 1, 1);
-
-        install_button = new Gtk.Button.with_label (_("Install"));
-        install_button.clicked.connect (() => { install_remove_app.begin (); });
-        install_button.visible = true;
-        grid.attach (install_button, 0, 2, 1, 1);
-
-        description_label = new Gtk.Label ("");
-        description_label.visible = true;
-        description_label.wrap = true;
-        grid.attach (description_label, 0, 3, 2, 1);
+        details_page = new DetailsPage ();
+        details_page.visible = true;
+        stack.add_named (details_page, "details");
 
         var client = new Snapd.Client ();
         try {
             var snaps = client.list_sync ();
             for (var i = 0; i < snaps.length; i++) {
                 var app = new SnapApp (snaps[i], null);
-                var row = new AppRow (app);
-                row.visible = true;
-                app_list.add (row);
+                installed_page.add_app (app);
             }
         }
         catch (Error e) {
             warning ("Failed to get installed snaps: %s", e.message);
         }
 
+        load_featured.begin ();
         load_appstream.begin ();
+    }
+
+    private async void load_featured ()
+    {
+        var client = new Snapd.Client ();
+        try {
+            string suggested_currency;
+            var snaps = yield client.find_section_async (Snapd.FindFlags.NONE, "featured", null, null, out suggested_currency);
+            for (var i = 0; i < snaps.length; i++) {
+                var app = new SnapApp (snaps[i], null);
+                home_page.add_app (app);
+            }
+        }
+        catch (Error e) {
+            warning ("Failed to get featured snaps: %s", e.message);
+        }
     }
 
     private async void load_appstream ()
@@ -158,9 +151,7 @@ public class AppWindow : Gtk.ApplicationWindow
                         var component = components[j];
                         if (component.get_pkgname () == package.get_name ()) {
                             var app = new PkApp (package, component);
-                            var row = new AppRow (app);
-                            row.visible = true;
-                            app_list.add (row);
+                            installed_page.add_app (app);
                             break;
                         }
                     }
@@ -172,72 +163,47 @@ public class AppWindow : Gtk.ApplicationWindow
         }
     }
 
-    public void show_installed ()
+    private void show_home ()
     {
-        back_button.visible = false;
-        search_button.visible = true;
-        stack.set_visible_child_name ("installed");
+        page_stack.clear ();
+        stack.visible_child_name = "home";
+        update_state ();
     }
 
-    public void show_details (App app)
+    private void show_installed ()
     {
-        selected_app = app;
-        back_button.visible = true;
-        search_button.visible = false;
-        selected_app.changed.connect (() => { refresh_selected_metadata (); }); // FIXME: Disconnect when changes
-        refresh_selected_metadata ();
-        stack.set_visible_child_name ("details");
+        page_stack.clear ();
+        stack.visible_child_name = "installed";
+        update_state ();
     }
 
-    private void refresh_selected_metadata ()
+    private void show_details (App app)
     {
-        if (selected_app.is_installed)
-            install_button.label = _("Remove");
-        else
-            install_button.label = _("Install");
-        title_label.label = selected_app.title;
-        summary_label.label = selected_app.summary;
-        description_label.label = selected_app.description;
-        icon_image.url = selected_app.icon_url;
+        details_page.set_app (app);
+        page_stack.push_head (stack.visible_child_name);
+        stack.visible_child_name = "details";
+        update_state ();
     }
 
-    public async void install_remove_app ()
+    private void show_search ()
     {
-        install_button.sensitive = false;
-        if (!selected_app.is_installed)
-            yield selected_app.install ();
-        else
-            yield selected_app.remove ();
-        install_button.sensitive = true;
+        search_page.reset ();
+        page_stack.push_head (stack.visible_child_name);
+        stack.visible_child_name = "search";
+        update_state ();
     }
 
-    public void show_search ()
+    private void update_state ()
     {
-        back_button.visible = true;
-        stack.set_visible_child_name ("search");
-        search_entry.grab_focus ();
-    }
-
-    private async void do_search (string text)
-    {
-        if (search_cancellable != null)
-            search_cancellable.cancel ();
-        search_cancellable = new Cancellable ();
-        search_list.forall ((element) => search_list.remove (element));
-        var client = new Snapd.Client ();
-        try {
-            string suggested_currency;
-            var snaps = yield client.find_async (Snapd.FindFlags.NONE, text, search_cancellable, out suggested_currency);
-            for (var i = 0; i < snaps.length; i++) {
-                var app = new SnapApp (null, snaps[i]);
-                var row = new AppRow (app);
-                row.visible = true;
-                search_list.add (row);
-            }
+        back_button.visible = page_stack.length > 0;
+        search_button.visible = stack.visible_child_name == "home" || stack.visible_child_name == "installed";
+        if (stack.visible_child_name == "home") {
+            home_button.active = true;
+            installed_button.active = false;
         }
-        catch (Error e)
-        {
-            warning ("Failed to search: %s\n", e.message);
+        if (stack.visible_child_name == "installed") {
+            home_button.active = false;
+            installed_button.active = true;
         }
     }
 }
