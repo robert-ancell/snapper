@@ -146,6 +146,7 @@ public class AppWindow : Gtk.ApplicationWindow
         yield;
 
         var pk_client = new Pk.Client ();
+        var missing_packages = "";
         try {
             var filter = Pk.Bitfield.from_enums (Pk.Filter.INSTALLED);
             var results = yield pk_client.get_packages_async (filter, null, () => {});
@@ -159,14 +160,17 @@ public class AppWindow : Gtk.ApplicationWindow
                         installed_page.add_app (app);
                     }
                     else
-                        warning ("Failed to find AppStream data for package %s", package.get_name ());
+                        missing_packages += " " + package.get_name ();
                 }
             }
         }
         catch (Error e) {
             warning ("Failed to get installed packages: %s", e.message);
         }
+        if (missing_packages != "")
+            warning ("Failed to find AppStream data for packages:%s", missing_packages);
 
+        missing_packages = "";
         try {
             var filter = Pk.Bitfield.from_enums (Pk.Filter.NONE);
             var results = yield pk_client.get_updates_async (filter, null, () => {});
@@ -180,13 +184,15 @@ public class AppWindow : Gtk.ApplicationWindow
                         updates_page.add_app (app);
                     }
                     else
-                        warning ("Failed to find AppStream data for package update %s", package.get_name ());
+                        missing_packages += " " + package.get_name ();
                 }
             }
         }
         catch (Error e) {
             warning ("Failed to get installed packages: %s", e.message);
         }
+        if (missing_packages != "")
+            warning ("Failed to find AppStream data for packages:%s", missing_packages);
     }
 
     private AppStream.Component? find_component (AppStream.Pool pool, string pkgname)
