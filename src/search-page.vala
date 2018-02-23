@@ -33,6 +33,7 @@ public class SearchPage : Gtk.Box
         search_list = new Gtk.ListBox ();
         search_list.visible = true;
         search_list.activate_on_single_click = true;
+        search_list.selection_mode = Gtk.SelectionMode.NONE;
         search_list.row_activated.connect ((row) => { select_app (((AppRow) row).app); });
         search_scroll.add (search_list);
     }

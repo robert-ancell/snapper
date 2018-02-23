@@ -106,23 +106,39 @@ public class AppWindow : Gtk.ApplicationWindow
             warning ("Failed to get installed snaps: %s", e.message);
         }
 
-        load_featured.begin ();
+        load_sections.begin ();
         load_appstream.begin ();
     }
 
-    private async void load_featured ()
+    private async void load_sections ()
     {
         var client = new Snapd.Client ();
+
+        string[] sections;
         try {
-            string suggested_currency;
-            var snaps = yield client.find_section_async (Snapd.FindFlags.NONE, "featured", null, null, out suggested_currency);
-            for (var i = 0; i < snaps.length; i++) {
-                var app = new SnapApp (snaps[i], null);
-                home_page.add_app (app);
-            }
+            sections = yield client.get_sections_async (null);
         }
         catch (Error e) {
-            warning ("Failed to get featured snaps: %s", e.message);
+            warning ("Failed to get sections: %s", e.message);
+            return;
+        }
+
+        var section_lists = new HashTable<string, SectionList> (str_hash, str_equal);
+        foreach (var section_name in sections)
+            section_lists.insert (section_name, home_page.add_section (section_name));
+
+        foreach (var section_name in sections) {
+            try {
+                string suggested_currency;
+                var snaps = yield client.find_section_async (Snapd.FindFlags.NONE, section_name, null, null, out suggested_currency);
+                for (var i = 0; i < snaps.length; i++) {
+                    var app = new SnapApp (snaps[i], null);
+                    section_lists.lookup (section_name).add_app (app);
+                }
+            }
+            catch (Error e) {
+                warning ("Failed to get section %s: %s", section_name, e.message);
+            }
         }
     }
 

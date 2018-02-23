@@ -12,23 +12,23 @@ public class HomePage : Gtk.ScrolledWindow
 {
     public signal void select_app (App app);
 
-    private Gtk.ListBox app_list;
+    private Gtk.Box section_box;
 
     public HomePage ()
     {
         set_policy (Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC);
 
-        app_list = new Gtk.ListBox ();
-        app_list.visible = true;
-        app_list.activate_on_single_click = true;
-        app_list.row_activated.connect ((row) => { select_app (((AppRow) row).app); });
-        add (app_list);
+        section_box = new Gtk.Box (Gtk.Orientation.VERTICAL, 12);
+        section_box.visible = true;
+        add (section_box);
     }
 
-    public void add_app (App app)
+    public SectionList add_section (string name)
     {
-        var row = new AppRow (app);
-        row.visible = true;
-        app_list.add (row);
+        var section = new SectionList (name);
+        section.visible = true;
+        section.select_app.connect ((app) => { select_app (app); });
+        section_box.pack_start (section, false, true, 0);
+        return section;
     }
 }

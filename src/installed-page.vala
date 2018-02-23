@@ -21,6 +21,7 @@ public class InstalledPage : Gtk.ScrolledWindow
         app_list = new Gtk.ListBox ();
         app_list.visible = true;
         app_list.activate_on_single_click = true;
+        app_list.selection_mode = Gtk.SelectionMode.NONE;
         app_list.row_activated.connect ((row) => { select_app (((AppRow) row).app); });
         add (app_list);
     }
