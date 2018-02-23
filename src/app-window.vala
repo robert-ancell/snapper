@@ -138,7 +138,6 @@ public class AppWindow : Gtk.ApplicationWindow
 
         yield;
 
-        var components = pool.get_components ();
         var pk_client = new Pk.Client ();
         try {
             var filter = Pk.Bitfield.from_enums (Pk.Filter.INSTALLED);
@@ -147,20 +146,31 @@ public class AppWindow : Gtk.ApplicationWindow
                 var packages = results.get_package_array ();
                 for (var i = 0; i < packages.length; i++) {
                     var package = packages[i];
-                    for (var j = 0; j < components.length; j++) {
-                        var component = components[j];
-                        if (component.get_pkgname () == package.get_name ()) {
-                            var app = new PkApp (package, component);
-                            installed_page.add_app (app);
-                            break;
-                        }
+                    var component = find_component (pool, package.get_name ());
+                    if (component != null) {
+                        var app = new PkApp (package, component);
+                        installed_page.add_app (app);
                     }
+                    else
+                        warning ("Failed to find AppStream data for package %s", package.get_name ());
                 }
             }
         }
         catch (Error e) {
             warning ("Failed to get installed packages: %s", e.message);
         }
+    }
+
+    private AppStream.Component? find_component (AppStream.Pool pool, string pkgname)
+    {
+        var components = pool.get_components ();
+        for (var i = 0; i < components.length; i++) {
+            var component = components[i];
+            if (component.get_pkgname () == pkgname)
+                return component;
+        }
+
+        return null;
     }
 
     private void show_home ()
