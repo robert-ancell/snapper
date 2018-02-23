@@ -8,7 +8,7 @@
  * license.
  */
 
-public class AsyncImage : Gtk.Image {
+public class AsyncImage : Gtk.Stack {
     private string url_;
     public string url {
         get { return url_; }
@@ -16,13 +16,24 @@ public class AsyncImage : Gtk.Image {
             if (url_ == value)
                 return;
             url_ = value;
-            set_from_icon_name ("package", Gtk.IconSize.DIALOG);
+            visible_child_name = "default";
             load.begin ();
         }
     }
 
+    private Gtk.Image image;
+
     public AsyncImage () {
-        set_from_icon_name ("package", Gtk.IconSize.DIALOG);
+        transition_type = Gtk.StackTransitionType.CROSSFADE;
+
+        var default_image = new Gtk.Image ();
+        default_image.visible = true;
+        default_image.set_from_icon_name ("package", Gtk.IconSize.DIALOG);
+        add_named (default_image, "default");
+
+        image = new Gtk.Image ();
+        image.visible = true;
+        add_named (image, "loaded");
     }
     
     private async void load ()
@@ -37,7 +48,8 @@ public class AsyncImage : Gtk.Image {
             Gtk.icon_size_lookup (Gtk.IconSize.DIALOG, out width, out height);
             try {
                 var pixbuf = new Gdk.Pixbuf.from_file_at_size (filename, width, height);
-                set_from_pixbuf (pixbuf);
+                image.set_from_pixbuf (pixbuf);
+                visible_child_name = "loaded";
             }
             catch (Error e) {
                 warning ("Failed to load icon: %s", url);
@@ -54,7 +66,8 @@ public class AsyncImage : Gtk.Image {
                 int width, height;
                 Gtk.icon_size_lookup (Gtk.IconSize.DIALOG, out width, out height);
                 var pixbuf = yield new Gdk.Pixbuf.from_stream_at_scale_async (stream, width, height, true);
-                set_from_pixbuf (pixbuf);
+                image.set_from_pixbuf (pixbuf);
+                visible_child_name = "loaded";
             }
             catch (Error e) {
                 warning ("Failed to download icon: %s", url);
