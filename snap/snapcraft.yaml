@@ -15,6 +15,8 @@ parts:
   gnome-3-26:
     plugin: nil
     prepare: |
+      apt-get -y update
+      apt-get install -y software-properties-common
       add-apt-repository -y ppa:ubuntu-desktop/gnome-3-26
       apt-get -y update
       apt-get -y dist-upgrade
@@ -38,33 +40,6 @@ parts:
       - libpolkit-gobject-1-dev
       - libsoup2.4-dev
       - valac
-  #appstream:
-    #build-attributes: ['no-system-libraries']
-    #after: [snapd-glib]
-    #source: https://github.com/ximion/appstream.git
-    #source-type: git
-    #source-tag: APPSTREAM_0_11_8
-    #prepare:
-    #  patch -p1 < ../../../snap/patches/appstream_paths.patch
-    #plugin: meson
-    #meson-parameters:
-    #  - --prefix=/snap/robert-ancell-snapper/current/usr
-    #  - -Denable-vapi=true
-    #  - -Denable-apidocs=false
-    #  - -Denable-apt-support=true
-    #organize:
-    #  snap/robert-ancell-snapper/current/usr: usr
-    #build-packages:
-    #  - gettext
-    #  - gobject-introspection
-    #  - itstool
-    #  - libgirepository1.0-dev
-    #  - libglib2.0-dev
-    #  - libstemmer-dev
-    #  - libxml2-dev
-    #  - libyaml-dev
-    #  - valac
-    #  - xmlto
   robert-ancell-snapper:
     build-attributes: ['no-system-libraries']
     after: [snapd-glib]
