@@ -13,10 +13,12 @@ public class AppWindow : Gtk.ApplicationWindow
     private Gtk.Stack stack;
     private Gtk.ToggleButton home_button;
     private Gtk.ToggleButton installed_button;
+    private Gtk.ToggleButton updates_button;
     private Gtk.Button back_button;
     private Gtk.Button search_button;
     private HomePage home_page;
     private InstalledPage installed_page;
+    private UpdatesPage updates_page;
     private DetailsPage details_page;
     private SearchPage search_page;
     private Queue<string> page_stack;
@@ -50,10 +52,10 @@ public class AppWindow : Gtk.ApplicationWindow
         installed_button.clicked.connect (() => { if (installed_button.active) show_installed (); });
         page_box.pack_start (installed_button, false, true, 0);
 
-        /*updates_button = new Gtk.ToggleButton.with_label ("Updates");
+        updates_button = new Gtk.ToggleButton.with_label ("Updates");
         updates_button.visible = true;
-        updates_button.clicked.connect (() => { page_stack.clear (); stack.visible_child_name = "updates"; update_state (); });
-        page_box.pack_start (updates_button, false, true, 0);*/
+        updates_button.clicked.connect (() => { if (updates_button.active) show_updates (); });
+        page_box.pack_start (updates_button, false, true, 0);
 
         back_button = new Gtk.Button.from_icon_name ("back");
         back_button.clicked.connect (() => { stack.visible_child_name = page_stack.pop_head (); update_state (); });
@@ -77,6 +79,11 @@ public class AppWindow : Gtk.ApplicationWindow
         installed_page.visible = true;
         installed_page.select_app.connect ((app) => { show_details (app); });
         stack.add_named (installed_page, "installed");
+
+        updates_page = new UpdatesPage ();
+        updates_page.visible = true;
+        updates_page.select_app.connect ((app) => { show_details (app); });
+        stack.add_named (updates_page, "updates");
 
         search_page = new SearchPage ();
         search_page.visible = true;
@@ -141,7 +148,7 @@ public class AppWindow : Gtk.ApplicationWindow
         var pk_client = new Pk.Client ();
         try {
             var filter = Pk.Bitfield.from_enums (Pk.Filter.INSTALLED);
-            var results = pk_client.get_packages (filter, null, () => {});
+            var results = yield pk_client.get_packages_async (filter, null, () => {});
             if (results.get_error_code () == null) {
                 var packages = results.get_package_array ();
                 for (var i = 0; i < packages.length; i++) {
@@ -153,6 +160,27 @@ public class AppWindow : Gtk.ApplicationWindow
                     }
                     else
                         warning ("Failed to find AppStream data for package %s", package.get_name ());
+                }
+            }
+        }
+        catch (Error e) {
+            warning ("Failed to get installed packages: %s", e.message);
+        }
+
+        try {
+            var filter = Pk.Bitfield.from_enums (Pk.Filter.NONE);
+            var results = yield pk_client.get_updates_async (filter, null, () => {});
+            if (results.get_error_code () == null) {
+                var packages = results.get_package_array ();
+                for (var i = 0; i < packages.length; i++) {
+                    var package = packages[i];
+                    var component = find_component (pool, package.get_name ());
+                    if (component != null) {
+                        var app = new PkApp (package, component);
+                        updates_page.add_app (app);
+                    }
+                    else
+                        warning ("Failed to find AppStream data for package update %s", package.get_name ());
                 }
             }
         }
@@ -187,6 +215,13 @@ public class AppWindow : Gtk.ApplicationWindow
         update_state ();
     }
 
+    private void show_updates ()
+    {
+        page_stack.clear ();
+        stack.visible_child_name = "updates";
+        update_state ();
+    }
+
     private void show_details (App app)
     {
         details_page.set_app (app);
@@ -210,10 +245,17 @@ public class AppWindow : Gtk.ApplicationWindow
         if (stack.visible_child_name == "home") {
             home_button.active = true;
             installed_button.active = false;
+            updates_button.active = false;
         }
         if (stack.visible_child_name == "installed") {
             home_button.active = false;
             installed_button.active = true;
+            updates_button.active = false;
+        }
+        if (stack.visible_child_name == "updates") {
+            home_button.active = false;
+            installed_button.active = false;
+            updates_button.active = true;
         }
     }
 }
