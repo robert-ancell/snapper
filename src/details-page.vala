@@ -16,6 +16,7 @@ public class DetailsPage : Gtk.ScrolledWindow
     private Gtk.Label title_label;
     private Gtk.Label summary_label;
     private Gtk.Button install_button;
+    private Gtk.ScrolledWindow screenshot_scroll;
     private Gtk.Label description_label;
     private Gtk.Box channel_box;
     private App? selected_app;
@@ -30,7 +31,9 @@ public class DetailsPage : Gtk.ScrolledWindow
         grid.row_spacing = 12;
         add (grid);
 
-        icon_image = new AsyncImage ();
+        int width, height;
+        Gtk.icon_size_lookup (Gtk.IconSize.DIALOG, out width, out height);
+        icon_image = new AsyncImage (width, height, "package");
         icon_image.visible = true;
         icon_image.expand = false;
         grid.attach (icon_image, 0, 0, 1, 2);
@@ -52,19 +55,26 @@ public class DetailsPage : Gtk.ScrolledWindow
         install_button.visible = true;
         grid.attach (install_button, 0, 2, 1, 1);
 
+        screenshot_scroll = new Gtk.ScrolledWindow (null, null);
+        screenshot_scroll.set_policy (Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.NEVER);
+        grid.attach (screenshot_scroll, 0, 4, 2, 1);
+
         description_label = new Gtk.Label ("");
         description_label.visible = true;
         description_label.wrap = true;
-        grid.attach (description_label, 0, 3, 2, 1);
+        grid.attach (description_label, 0, 5, 2, 1);
 
         channel_box = new Gtk.Box (Gtk.Orientation.VERTICAL, 0);
         channel_box.visible = true;
-        grid.attach (channel_box, 0, 4, 2, 1);
+        grid.attach (channel_box, 0, 6, 2, 1);
     }
 
     public void set_app (App app)
     {
         selected_app = app;
+        if (screenshot_scroll.get_children () != null)
+            screenshot_scroll.remove (screenshot_scroll.get_children ().nth_data (0));
+        screenshot_scroll.visible = false;
         selected_app.changed.connect (() => { refresh_selected_metadata (); }); // FIXME: Disconnect when changes
         refresh_selected_metadata ();
     }
@@ -79,6 +89,20 @@ public class DetailsPage : Gtk.ScrolledWindow
         summary_label.label = selected_app.summary;
         description_label.label = selected_app.description;
         icon_image.url = selected_app.icon_url;
+
+        var screenshot_urls = selected_app.get_screenshots ();
+        if (screenshot_urls.length != 0 && !screenshot_scroll.visible) {
+            screenshot_scroll.visible = true;
+            var box = new Gtk.Box (Gtk.Orientation.HORIZONTAL, 6);
+            box.visible = true;
+            screenshot_scroll.add (box);
+            foreach (var url in screenshot_urls) {
+                var image = new AsyncImage (350, 350, "image-loading-symbolic");
+                image.visible = true;
+                image.url = url;
+                box.pack_start (image, false, false, 0);
+            }
+        }
 
         if (channel_box.get_children () != null)
             channel_box.remove (channel_box.get_children ().nth_data (0));

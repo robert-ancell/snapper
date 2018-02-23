@@ -21,14 +21,21 @@ public class AsyncImage : Gtk.Stack {
         }
     }
 
+    private int width;
+    private int height;
     private Gtk.Image image;
 
-    public AsyncImage () {
+    public AsyncImage (int width, int height, string default_icon_name) {
         transition_type = Gtk.StackTransitionType.CROSSFADE;
+
+        this.width = width;
+        this.height = height;
+
+        set_size_request (width, height);
 
         var default_image = new Gtk.Image ();
         default_image.visible = true;
-        default_image.set_from_icon_name ("package", Gtk.IconSize.DIALOG);
+        default_image.set_from_icon_name (default_icon_name, Gtk.IconSize.DIALOG);
         add_named (default_image, "default");
 
         image = new Gtk.Image ();
@@ -63,8 +70,6 @@ public class AsyncImage : Gtk.Stack {
             var message = new Soup.Message ("GET", url);
             try {
                 var stream = yield session.send_async (message);
-                int width, height;
-                Gtk.icon_size_lookup (Gtk.IconSize.DIALOG, out width, out height);
                 var pixbuf = yield new Gdk.Pixbuf.from_stream_at_scale_async (stream, width, height, true);
                 image.set_from_pixbuf (pixbuf);
                 visible_child_name = "loaded";

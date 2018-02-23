@@ -22,7 +22,9 @@ public class AppTile : Gtk.FlowBoxChild
         box.visible = true;
         add (box);
 
-        icon_image = new AsyncImage ();
+        int width, height;
+        Gtk.icon_size_lookup (Gtk.IconSize.DIALOG, out width, out height);
+        icon_image = new AsyncImage (width, height, "package");
         icon_image.visible = true;
         box.pack_start (icon_image, false, false, 0);
 

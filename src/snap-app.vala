@@ -105,6 +105,25 @@ public class SnapApp : App
         return null;
     }
 
+    public override string[] get_screenshots ()
+    {
+        if (store_snap == null)
+            return new string[0];
+
+        var screenshots = store_snap.get_screenshots ();
+        string[] urls = {};
+        for (var i = 0; i < screenshots.length; i++) {
+            var url = screenshots[i].url;
+            var basename = Path.get_basename (url);
+            if (basename == "banner.png" || basename == "banner.jpg" || basename == "banner-icon.png" || basename == "banner-icon.jpg" ||
+                ((basename.has_prefix ("banner-icon_") || basename.has_prefix ("banner_")) && (basename.has_suffix (".png") || basename.has_suffix (".jpg"))))
+                continue;
+            urls += screenshots[i].url;
+        }
+
+        return urls;
+    }
+
     public override async void install (Cancellable? cancellable = null)
     {
         var client = new Snapd.Client ();

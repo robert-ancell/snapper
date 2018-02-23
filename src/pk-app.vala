@@ -66,6 +66,16 @@ public class PkApp : App
         return null;
     }
 
+    public override string[] get_screenshots ()
+    {
+        var screenshots = component.get_screenshots ();
+        string[] urls = {};
+        for (var i = 0; i < screenshots.length; i++) {
+            urls += screenshots[i].get_images ()[0].get_url ();
+        }
+        return urls;
+    }
+
     public override async void install (Cancellable? cancellable = null)
     {
     }

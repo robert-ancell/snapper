@@ -33,6 +33,11 @@ public class App : Object
         return null;
     }
 
+    public virtual string[] get_screenshots ()
+    {
+        return new string[0];
+    }
+
     public virtual async void install (Cancellable? cancellable = null)
     {
     }
