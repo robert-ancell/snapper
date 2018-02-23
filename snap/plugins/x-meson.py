@@ -79,8 +79,6 @@ class MesonPlugin(snapcraft.BasePlugin):
         env['VAPIDIR'] = self.project.stage_dir + '/usr/share/vala/vapi'
         env['GI_TYPELIB_PATH'] = self.project.stage_dir +  '/usr/lib/' + self.project.arch_triplet + '/girepository-1.0:/usr/lib/' + self.project.arch_triplet + '/girepository-1.0'
         env['XDG_DATA_DIRS'] = self.project.stage_dir + '/usr/share:/usr/share'
-        print ("_run_meson")
-        print (env['VAPIDIR'])
         self.run(meson_command, env=env)
 
     def _run_ninja_build_default(self):
@@ -90,8 +88,6 @@ class MesonPlugin(snapcraft.BasePlugin):
         env['VAPIDIR'] = self.project.stage_dir + '/usr/share/vala/vapi'
         env['GI_TYPELIB_PATH'] = self.project.stage_dir +  '/usr/lib/' + self.project.arch_triplet + '/girepository-1.0:/usr/lib/' + self.project.arch_triplet + '/girepository-1.0'
         env['XDG_DATA_DIRS'] = self.project.stage_dir + '/usr/share:/usr/share'
-        print ("_run_ninja_build_default")
-        print (env['VAPIDIR'])
         self.run(ninja_command, env=env, cwd=self.mesonbuilddir)
 
     def _run_ninja_install(self):
