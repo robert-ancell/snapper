@@ -32,6 +32,7 @@ public class SearchPage : Gtk.Box
 
         search_list = new Gtk.ListBox ();
         search_list.visible = true;
+        search_list.margin = 12;
         search_list.activate_on_single_click = true;
         search_list.selection_mode = Gtk.SelectionMode.NONE;
         search_list.row_activated.connect ((row) => { select_app (((AppRow) row).app); });
@@ -57,6 +58,7 @@ public class SearchPage : Gtk.Box
                 var app = new SnapApp (null, snaps[i]);
                 var row = new AppRow (app);
                 row.visible = true;
+                row.margin = 6;
                 search_list.add (row);
             }
         }

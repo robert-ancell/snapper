@@ -30,6 +30,8 @@ public class SectionList : Gtk.Box
         app_box = new Gtk.FlowBox ();
         app_box.visible = true;
         app_box.homogeneous = true;
+        app_box.row_spacing = 6;
+        app_box.column_spacing = 6;
         app_box.activate_on_single_click = true;
         app_box.selection_mode = Gtk.SelectionMode.NONE;
         app_box.child_activated.connect ((child) => { select_app (((AppTile) child).app); });

@@ -20,6 +20,7 @@ public class HomePage : Gtk.ScrolledWindow
 
         section_box = new Gtk.Box (Gtk.Orientation.VERTICAL, 12);
         section_box.visible = true;
+        section_box.margin = 12;
         add (section_box);
     }
 

@@ -26,6 +26,7 @@ public class DetailsPage : Gtk.ScrolledWindow
 
         var grid = new Gtk.Grid ();
         grid.visible = true;
+        grid.margin = 12;
         grid.row_spacing = 12;
         add (grid);
 
