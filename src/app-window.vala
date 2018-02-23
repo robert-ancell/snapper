@@ -94,9 +94,16 @@ public class AppWindow : Gtk.ApplicationWindow
         details_page.visible = true;
         stack.add_named (details_page, "details");
 
+        load_installed.begin ();
+        load_sections.begin ();
+        load_appstream.begin ();
+    }
+
+    private async void load_installed ()
+    {
         var client = new Snapd.Client ();
         try {
-            var snaps = client.list_sync ();
+            var snaps = yield client.list_async (null);
             for (var i = 0; i < snaps.length; i++) {
                 var app = new SnapApp (snaps[i], null);
                 installed_page.add_app (app);
@@ -105,9 +112,6 @@ public class AppWindow : Gtk.ApplicationWindow
         catch (Error e) {
             warning ("Failed to get installed snaps: %s", e.message);
         }
-
-        load_sections.begin ();
-        load_appstream.begin ();
     }
 
     private async void load_sections ()
