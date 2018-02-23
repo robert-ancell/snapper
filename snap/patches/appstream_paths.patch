@@ -1,0 +1,22 @@
+diff --git a/src/as-pool.c b/src/as-pool.c
+index a9e782e..ac144af 100644
+--- a/src/as-pool.c
++++ b/src/as-pool.c
+@@ -90,7 +90,7 @@ G_DEFINE_TYPE_WITH_PRIVATE (AsPool, as_pool, G_TYPE_OBJECT)
+  *
+  * Locations where system AppStream metadata can be stored.
+  */
+-const gchar *AS_APPSTREAM_METADATA_PATHS[4] = { "/usr/share/app-info",
++const gchar *AS_APPSTREAM_METADATA_PATHS[4] = { "/snap/robert-ancell-snapper/current/usr/share/app-info",
+ 						"/var/lib/app-info",
+ 						"/var/cache/app-info",
+ 						NULL};
+@@ -107,7 +107,7 @@ const gchar *AS_APPSTREAM_METADATA_PATHS[4] = { "/usr/share/app-info",
+ static gchar *APPLICATIONS_DIR = "/usr/share/applications";
+ 
+ /* where metainfo files can be found */
+-static gchar *METAINFO_DIR = "/usr/share/metainfo";
++static gchar *METAINFO_DIR = "/snap/robert-ancell-snapper/current/usr/share/metainfo";
+ 
+ static void as_pool_add_metadata_location_internal (AsPool *pool, const gchar *directory, gboolean add_root);
+ 
