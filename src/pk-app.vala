@@ -56,6 +56,16 @@ public class PkApp : App
         this.component = component;
     }
 
+    public override string[] get_tracks () {
+        return new string[] { "latest" };
+    }
+
+    public override string? get_channel_version (string track, string risk, string? branch = null) {
+        if (track == "latest" && risk == "stable" && branch == null)
+            return package.get_version ();
+        return null;
+    }
+
     public override async void install (Cancellable? cancellable = null)
     {
     }

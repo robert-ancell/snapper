@@ -64,7 +64,7 @@ public class SnapApp : App
     }
 
     private Snapd.Snap? local_snap;
-    private Snapd.Snap? store_snap;    
+    private Snapd.Snap? store_snap;
 
     public SnapApp (Snapd.Snap? local_snap, Snapd.Snap? store_snap)
     {
@@ -82,6 +82,27 @@ public class SnapApp : App
         this.store_snap = store_snap;
         if (store_snap == null)
             load_store_metadata.begin (local_snap.name);
+    }
+
+    public override string[] get_tracks () {
+        if (store_snap == null)
+            return new string[0];
+
+        return store_snap.get_tracks ();
+    }
+
+    public override string? get_channel_version (string track, string risk, string? branch = null) {
+        if (store_snap == null)
+            return null;
+
+        var channels = store_snap.get_channels ();
+        for (var i = 0; i < channels.length; i++) {
+            var channel = channels[i];
+            if (channel.get_track () == track && channel.get_risk () == risk && channel.get_branch () == branch)
+                return channel.version;
+        }
+
+        return null;
     }
 
     public override async void install (Cancellable? cancellable = null)

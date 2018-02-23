@@ -24,6 +24,15 @@ public class App : Object
     {
     }
 
+    public virtual string[] get_tracks ()
+    {
+        return new string[0];
+    }
+
+    public virtual string? get_channel_version (string track, string risk, string? branch = null) {
+        return null;
+    }
+
     public virtual async void install (Cancellable? cancellable = null)
     {
     }

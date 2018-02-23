@@ -17,6 +17,7 @@ public class DetailsPage : Gtk.ScrolledWindow
     private Gtk.Label summary_label;
     private Gtk.Button install_button;
     private Gtk.Label description_label;
+    private Gtk.Box channel_box;
     private App? selected_app;
 
     public DetailsPage ()
@@ -25,6 +26,7 @@ public class DetailsPage : Gtk.ScrolledWindow
 
         var grid = new Gtk.Grid ();
         grid.visible = true;
+        grid.row_spacing = 12;
         add (grid);
 
         icon_image = new AsyncImage ();
@@ -53,6 +55,10 @@ public class DetailsPage : Gtk.ScrolledWindow
         description_label.visible = true;
         description_label.wrap = true;
         grid.attach (description_label, 0, 3, 2, 1);
+
+        channel_box = new Gtk.Box (Gtk.Orientation.VERTICAL, 0);
+        channel_box.visible = true;
+        grid.attach (channel_box, 0, 4, 2, 1);
     }
 
     public void set_app (App app)
@@ -72,6 +78,53 @@ public class DetailsPage : Gtk.ScrolledWindow
         summary_label.label = selected_app.summary;
         description_label.label = selected_app.description;
         icon_image.url = selected_app.icon_url;
+
+        if (channel_box.get_children () != null)
+            channel_box.remove (channel_box.get_children ().nth_data (0));
+
+        var channel_grid = new Gtk.Grid ();
+        channel_grid.visible = true;
+        channel_grid.row_spacing = 6;
+        channel_grid.column_spacing = 6;
+        channel_box.add (channel_grid);
+
+        var channel_label = new Gtk.Label (_("Channel"));
+        channel_label.visible = true;
+        channel_label.xalign = 0;
+        var attributes = new Pango.AttrList ();
+        attributes.insert (Pango.attr_weight_new (Pango.Weight.BOLD));
+        channel_label.attributes = attributes;
+        channel_grid.attach (channel_label, 0, 0, 1, 1);
+
+        var version_label = new Gtk.Label (_("Version"));
+        version_label.visible = true;
+        attributes = new Pango.AttrList ();
+        attributes.insert (Pango.attr_weight_new (Pango.Weight.BOLD));
+        version_label.attributes = attributes;
+        channel_grid.attach (version_label, 1, 0, 1, 1);
+
+        var tracks = selected_app.get_tracks ();
+        var channel_count = 0;
+        if (tracks.length > 0) {
+            foreach (var track in tracks) {
+                string[] risks = { "stable", "candidate", "beta", "edge" };
+                foreach (var risk in risks) {
+                    var version = selected_app.get_channel_version (track, risk);
+                    var name = track == "latest" ? risk : "%s/%s".printf (track, risk);
+
+                    var name_label = new Gtk.Label (name);
+                    name_label.visible = true;
+                    name_label.xalign = 0;
+                    channel_grid.attach (name_label, 0, channel_count + 1, 1, 1);
+
+                    var v_label = new Gtk.Label (version != null ? version : "↑");
+                    v_label.visible = true;
+                    channel_grid.attach (v_label, 1, channel_count + 1, 1, 1);
+
+                    channel_count++;
+                }
+            }
+        }
     }
 
     public async void install_remove_app ()
