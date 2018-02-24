@@ -168,11 +168,11 @@ public class AppWindow : Gtk.ApplicationWindow
 
         yield;
 
-        var pk_client = new Pk.Client ();
+        var task = new Pk.Task ();
         var missing_packages = "";
         try {
             var filter = Pk.Bitfield.from_enums (Pk.Filter.INSTALLED);
-            var results = yield pk_client.get_packages_async (filter, null, () => {});
+            var results = yield task.get_packages_async (filter, null, () => {});
             if (results.get_error_code () == null) {
                 var packages = results.get_package_array ();
                 for (var i = 0; i < packages.length; i++) {
@@ -196,7 +196,7 @@ public class AppWindow : Gtk.ApplicationWindow
         missing_packages = "";
         try {
             var filter = Pk.Bitfield.from_enums (Pk.Filter.NONE);
-            var results = yield pk_client.get_updates_async (filter, null, () => {});
+            var results = yield task.get_updates_async (filter, null, () => {});
             if (results.get_error_code () == null) {
                 var packages = results.get_package_array ();
                 for (var i = 0; i < packages.length; i++) {
