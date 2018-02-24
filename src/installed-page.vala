@@ -23,6 +23,11 @@ public class InstalledPage : Gtk.ScrolledWindow
         app_list.margin = 12;
         app_list.activate_on_single_click = true;
         app_list.selection_mode = Gtk.SelectionMode.NONE;
+        app_list.set_sort_func ((row1, row2) => {
+            var app1 = ((AppRow) row1).app;
+            var app2 = ((AppRow) row2).app;
+            return strcmp (app1.title.casefold (), app2.title.casefold ());
+        });
         app_list.row_activated.connect ((row) => { select_app (((AppRow) row).app); });
         add (app_list);
     }
