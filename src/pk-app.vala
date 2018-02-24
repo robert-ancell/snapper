@@ -43,16 +43,25 @@ public class PkApp : App
             return icons[0].get_url ();
         }
     }
+    public override uint64 download_size {
+        get {
+            if (details == null)
+                return 0;
+            return details.size;
+        }
+    }
     public override bool is_installed {
         get { return package != null; }
     }
 
     private Pk.Package? package;
+    private Pk.Details? details;
     private AppStream.Component component;
 
-    public PkApp (Pk.Package? package, AppStream.Component component)
+    public PkApp (Pk.Package? package, Pk.Details? details, AppStream.Component component)
     {
         this.package = package;
+        this.details = details;
         this.component = component;
     }
 

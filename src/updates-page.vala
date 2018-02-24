@@ -29,7 +29,7 @@ public class UpdatesPage : Gtk.ScrolledWindow
 
     public void add_app (App app)
     {
-        var row = new AppRow (app);
+        var row = new AppUpdateRow (app);
         row.visible = true;
         row.margin = 6;
         app_list.add (row);

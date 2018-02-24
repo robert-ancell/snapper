@@ -149,7 +149,7 @@ public class AppWindow : Gtk.ApplicationWindow
         }
     }
 
-    private async void load_appstream ()
+    private async void load_appstream (Cancellable? cancellable = null)
     {
         pool = new AppStream.Pool ();
 
@@ -172,14 +172,14 @@ public class AppWindow : Gtk.ApplicationWindow
         var missing_packages = "";
         try {
             var filter = Pk.Bitfield.from_enums (Pk.Filter.INSTALLED);
-            var results = yield task.get_packages_async (filter, null, () => {});
+            var results = yield task.get_packages_async (filter, cancellable, () => {});
             if (results.get_error_code () == null) {
                 var packages = results.get_package_array ();
                 for (var i = 0; i < packages.length; i++) {
                     var package = packages[i];
                     var component = find_component (package.get_name ());
                     if (component != null) {
-                        var app = new PkApp (package, component);
+                        var app = new PkApp (package, null, component);
                         installed_page.add_app (app);
                     }
                     else
@@ -196,20 +196,35 @@ public class AppWindow : Gtk.ApplicationWindow
         missing_packages = "";
         try {
             var filter = Pk.Bitfield.from_enums (Pk.Filter.NONE);
-            var results = yield task.get_updates_async (filter, null, () => {});
+            var results = yield task.get_updates_async (filter, cancellable, () => {});
             if (results.get_error_code () == null) {
                 var packages = results.get_package_array ();
+
+                string[] package_ids = {};
+                for (var i = 0; i < packages.length; i++)
+                    package_ids += packages[i].package_id;
+                var details_results = yield task.get_details_async (package_ids, cancellable, () => {});
+                var details_array = details_results.get_details_array ();
+
                 for (var i = 0; i < packages.length; i++) {
                     var package = packages[i];
                     var component = find_component (package.get_name ());
+                    Pk.Details? details = null;
+                    for (var j = 0; j < details_array.length; j++) {
+                        if (details_array[j].package_id == package.package_id) {
+                            details = details_array[j];
+                            break;
+                        }
+                    }
                     if (component != null) {
-                        var app = new PkApp (package, component);
+                        var app = new PkApp (package, details, component);
                         updates_page.add_app (app);
                     }
                     else
                         missing_packages += " " + package.get_name ();
                 }
             }
+
         }
         catch (Error e) {
             warning ("Failed to get installed packages: %s", e.message);
@@ -270,7 +285,7 @@ public class AppWindow : Gtk.ApplicationWindow
         var components = pool.search (text);
         for (var i = 0; i < components.length; i++) {
             var component = components[i];
-            var app = new PkApp (null, component);
+            var app = new PkApp (null, null, component);
             search_page.add_app (app);
         }
     }

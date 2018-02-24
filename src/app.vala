@@ -16,6 +16,7 @@ public class App : Object
     public virtual string summary { get { return ""; } }
     public virtual string description { get { return ""; } }
     public virtual string? icon_url { get { return ""; } }
+    public virtual uint64 download_size { get { return 0; } }
     public virtual bool is_installed { get { return false; } }
 
     public signal void changed ();
