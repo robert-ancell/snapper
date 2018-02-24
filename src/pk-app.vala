@@ -44,13 +44,13 @@ public class PkApp : App
         }
     }
     public override bool is_installed {
-        get { return true; }
+        get { return package != null; }
     }
 
-    private Pk.Package package;
+    private Pk.Package? package;
     private AppStream.Component component;
 
-    public PkApp (Pk.Package package, AppStream.Component component)
+    public PkApp (Pk.Package? package, AppStream.Component component)
     {
         this.package = package;
         this.component = component;
@@ -78,9 +78,25 @@ public class PkApp : App
 
     public override async void install (Cancellable? cancellable = null)
     {
+        var task = new Pk.Task ();
+        string[] ids = { component.get_pkgname () };
+        try {
+            yield task.install_packages_async (ids, cancellable, (progress, type) => {});
+        }
+        catch (Error e) {
+            warning ("Failed to install %s: %s", component.get_pkgname (), e.message);
+        }
     }
 
     public override async void remove (Cancellable? cancellable = null)
     {
+        var task = new Pk.Task ();
+        string[] ids = { component.get_pkgname () }; // FIXME: Id contains more than just pkgname
+        try {
+            yield task.remove_packages_async (ids, true, true, cancellable, (progress, type) => {});
+        }
+        catch (Error e) {
+            warning ("Failed to install %s: %s", component.get_pkgname (), e.message);
+        }
     }
 }

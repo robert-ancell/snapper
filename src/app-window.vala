@@ -21,7 +21,9 @@ public class AppWindow : Gtk.ApplicationWindow
     private UpdatesPage updates_page;
     private DetailsPage details_page;
     private SearchPage search_page;
+    private Cancellable? search_cancellable;
     private Queue<string> page_stack;
+    private AppStream.Pool pool;
 
     public AppWindow ()
     {
@@ -88,6 +90,7 @@ public class AppWindow : Gtk.ApplicationWindow
         search_page = new SearchPage ();
         search_page.visible = true;
         search_page.select_app.connect ((app) => { show_details (app); });
+        search_page.search.connect ((text) => { search (text); });
         stack.add_named (search_page, "search");
 
         details_page = new DetailsPage ();
@@ -148,7 +151,7 @@ public class AppWindow : Gtk.ApplicationWindow
 
     private async void load_appstream ()
     {
-        var pool = new AppStream.Pool ();
+        pool = new AppStream.Pool ();
 
         SourceFunc callback = load_appstream.callback;
         ThreadFunc<void*> run = () => {
@@ -174,7 +177,7 @@ public class AppWindow : Gtk.ApplicationWindow
                 var packages = results.get_package_array ();
                 for (var i = 0; i < packages.length; i++) {
                     var package = packages[i];
-                    var component = find_component (pool, package.get_name ());
+                    var component = find_component (package.get_name ());
                     if (component != null) {
                         var app = new PkApp (package, component);
                         installed_page.add_app (app);
@@ -198,7 +201,7 @@ public class AppWindow : Gtk.ApplicationWindow
                 var packages = results.get_package_array ();
                 for (var i = 0; i < packages.length; i++) {
                     var package = packages[i];
-                    var component = find_component (pool, package.get_name ());
+                    var component = find_component (package.get_name ());
                     if (component != null) {
                         var app = new PkApp (package, component);
                         updates_page.add_app (app);
@@ -215,7 +218,7 @@ public class AppWindow : Gtk.ApplicationWindow
             warning ("Failed to find AppStream data for packages:%s", missing_packages);
     }
 
-    private AppStream.Component? find_component (AppStream.Pool pool, string pkgname)
+    private AppStream.Component? find_component (string pkgname)
     {
         var components = pool.get_components ();
         for (var i = 0; i < components.length; i++) {
@@ -225,6 +228,45 @@ public class AppWindow : Gtk.ApplicationWindow
         }
 
         return null;
+    }
+
+    private void search (string text)
+    {
+        if (search_cancellable != null)
+            search_cancellable.cancel ();
+        search_cancellable = new Cancellable ();
+
+        search_page.clear ();
+        do_snapd_search.begin (text);
+        do_appstream_search.begin (text);
+    }
+
+    private async void do_snapd_search (string text)
+    {
+        var client = new Snapd.Client ();
+        try {
+            string suggested_currency;
+            var snaps = yield client.find_async (Snapd.FindFlags.NONE, text, search_cancellable, out suggested_currency);
+            for (var i = 0; i < snaps.length; i++) {
+                var app = new SnapApp (null, snaps[i]);
+                search_page.add_app (app);
+            }
+        }
+        catch (Error e)
+        {
+            warning ("Failed to search: %s\n", e.message);
+        }
+    }
+
+    private async void do_appstream_search (string text)
+    {
+        // FIXME: pool might not yet be loaded
+        var components = pool.search (text);
+        for (var i = 0; i < components.length; i++) {
+            var component = components[i];
+            var app = new PkApp (null, component);
+            search_page.add_app (app);
+        }
     }
 
     private void show_home ()

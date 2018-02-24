@@ -13,8 +13,9 @@ public class SearchPage : Gtk.Box
     public signal void select_app (App app);
 
     private Gtk.SearchEntry search_entry;
-    private Gtk.ListBox search_list;
-    private Cancellable? search_cancellable;
+    private Gtk.ListBox app_list;
+
+    public signal void search (string text);
 
     public SearchPage ()
     {
@@ -22,7 +23,7 @@ public class SearchPage : Gtk.Box
 
         search_entry = new Gtk.SearchEntry ();
         search_entry.visible = true;
-        search_entry.search_changed.connect (() => { do_search.begin (search_entry.text); });
+        search_entry.search_changed.connect (() => { search (search_entry.text); });
         pack_start (search_entry, false, false, 0);
 
         var search_scroll = new Gtk.ScrolledWindow (null, null);
@@ -30,13 +31,13 @@ public class SearchPage : Gtk.Box
         search_scroll.set_policy (Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC);
         pack_start (search_scroll, true, true, 0);
 
-        search_list = new Gtk.ListBox ();
-        search_list.visible = true;
-        search_list.margin = 12;
-        search_list.activate_on_single_click = true;
-        search_list.selection_mode = Gtk.SelectionMode.NONE;
-        search_list.row_activated.connect ((row) => { select_app (((AppRow) row).app); });
-        search_scroll.add (search_list);
+        app_list = new Gtk.ListBox ();
+        app_list.visible = true;
+        app_list.margin = 12;
+        app_list.activate_on_single_click = true;
+        app_list.selection_mode = Gtk.SelectionMode.NONE;
+        app_list.row_activated.connect ((row) => { select_app (((AppRow) row).app); });
+        search_scroll.add (app_list);
     }
 
     public void reset ()
@@ -44,27 +45,16 @@ public class SearchPage : Gtk.Box
         search_entry.grab_focus ();
     }
 
-    private async void do_search (string text)
+    public void clear ()
     {
-        if (search_cancellable != null)
-            search_cancellable.cancel ();
-        search_cancellable = new Cancellable ();
-        search_list.forall ((element) => search_list.remove (element));
-        var client = new Snapd.Client ();
-        try {
-            string suggested_currency;
-            var snaps = yield client.find_async (Snapd.FindFlags.NONE, text, search_cancellable, out suggested_currency);
-            for (var i = 0; i < snaps.length; i++) {
-                var app = new SnapApp (null, snaps[i]);
-                var row = new AppRow (app);
-                row.visible = true;
-                row.margin = 6;
-                search_list.add (row);
-            }
-        }
-        catch (Error e)
-        {
-            warning ("Failed to search: %s\n", e.message);
-        }
+        app_list.forall ((element) => app_list.remove (element));
+    }
+
+    public void add_app (App app)
+    {
+        var row = new AppRow (app);
+        row.visible = true;
+        row.margin = 6;
+        app_list.add (row);
     }
 }
