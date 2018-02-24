@@ -254,6 +254,8 @@ public class AppWindow : Gtk.ApplicationWindow
         }
         catch (Error e)
         {
+            if (e is IOError.CANCELLED)
+                return;
             warning ("Failed to search: %s\n", e.message);
         }
     }
