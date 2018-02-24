@@ -79,7 +79,21 @@ public class PkApp : App
     public override async void install (Cancellable? cancellable = null)
     {
         var task = new Pk.Task ();
-        string[] ids = { component.get_pkgname () };
+
+        /* Lookup package */
+        string[] ids = {};
+        try {
+            var filter = Pk.Bitfield.from_enums (Pk.Filter.NOT_INSTALLED, Pk.Filter.ARCH, Pk.Filter.NOT_SOURCE, Pk.Filter.NEWEST);
+            var results = yield task.resolve_async (filter, { component.get_pkgname () }, cancellable, (progress, type) => {});
+            var packages = results.get_package_array ();
+            for (var i = 0; i < packages.length; i++)
+                ids += packages[i].get_id ();
+        }
+        catch (Error e) {
+            warning ("Failed to lookup package %s: %s", component.get_pkgname (), e.message);
+            return;
+        }
+
         try {
             yield task.install_packages_async (ids, cancellable, (progress, type) => {});
         }
