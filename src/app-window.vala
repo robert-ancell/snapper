@@ -260,6 +260,10 @@ public class AppWindow : Gtk.ApplicationWindow
 
     private async void do_appstream_search (string text)
     {
+        // Short searches are too expensive...
+        if (text.length < 3)
+            return;
+
         // FIXME: pool might not yet be loaded
         var components = pool.search (text);
         for (var i = 0; i < components.length; i++) {
