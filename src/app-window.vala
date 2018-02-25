@@ -108,7 +108,7 @@ public class AppWindow : Gtk.ApplicationWindow
         try {
             var snaps = yield client.list_async (null);
             for (var i = 0; i < snaps.length; i++) {
-                var app = new SnapApp (snaps[i], null);
+                var app = new SnapApp (snaps[i].name, snaps[i], null);
                 installed_page.add_app (app);
             }
         }
@@ -139,7 +139,7 @@ public class AppWindow : Gtk.ApplicationWindow
                 string suggested_currency;
                 var snaps = yield client.find_section_async (Snapd.FindFlags.NONE, section_name, null, null, out suggested_currency);
                 for (var i = 0; i < snaps.length; i++) {
-                    var app = new SnapApp (snaps[i], null);
+                    var app = new SnapApp (snaps[i].name, snaps[i], null);
                     section_lists.lookup (section_name).add_app (app);
                 }
             }
@@ -263,7 +263,7 @@ public class AppWindow : Gtk.ApplicationWindow
             string suggested_currency;
             var snaps = yield client.find_async (Snapd.FindFlags.NONE, text, search_cancellable, out suggested_currency);
             for (var i = 0; i < snaps.length; i++) {
-                var app = new SnapApp (null, snaps[i]);
+                var app = new SnapApp (snaps[i].name, null, snaps[i]);
                 search_page.add_app (app);
             }
         }
@@ -311,7 +311,7 @@ public class AppWindow : Gtk.ApplicationWindow
         update_state ();
     }
 
-    private void show_details (App app)
+    public void show_details (App app)
     {
         details_page.set_app (app);
         page_stack.push_head (stack.visible_child_name);

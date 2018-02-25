@@ -14,40 +14,50 @@ public class SnapApp : App
         get {
             if (local_snap != null)
                 return local_snap.name;
-            else
+            else if (store_snap != null)
                 return store_snap.name;
+            else
+                return "";
         }
     }
     public override string title {
         get {
             if (local_snap != null)
                 return local_snap.title;
-            else
+            else if (store_snap != null)
                 return store_snap.title;
+            else
+                return "";
         }
     }
     public override string developer {
         get {
             if (local_snap != null)
                 return local_snap.developer;
-            else
+            else if (store_snap != null)
                 return store_snap.developer;
+            else
+                return "";
         }
     }
     public override string summary {
         get {
             if (local_snap != null)
                 return local_snap.summary;
-            else
+            else if (store_snap != null)
                 return store_snap.summary;
+            else
+                return "";
         }
     }
     public override string description {
         get {
             if (local_snap != null)
                 return local_snap.description;
-            else
+            else if (store_snap != null)
                 return store_snap.description;
+            else
+                return "";
         }
     }
     public override string? icon_url {
@@ -70,22 +80,16 @@ public class SnapApp : App
     private Snapd.Snap? store_snap;
     private double _progress = -1.0;
 
-    public SnapApp (Snapd.Snap? local_snap, Snapd.Snap? store_snap)
+    public SnapApp (string name, Snapd.Snap? local_snap = null, Snapd.Snap? store_snap = null)
     {
-        if (local_snap == null) {
-            var client = new Snapd.Client ();
-            try {
-                local_snap = client.list_one_sync (store_snap.name);
-            }
-            catch (Error e) {
-                warning ("Failed to get installed state for snap %s: %s", store_snap.name, e.message);
-            }
-        }
-
-        this.local_snap = local_snap;
-        this.store_snap = store_snap;
+        if (local_snap == null)
+            load_local_metadata.begin (name);
+        else
+            this.local_snap = local_snap;
         if (store_snap == null)
-            load_store_metadata.begin (local_snap.name);
+            load_store_metadata.begin (name);
+        else
+            this.store_snap = store_snap;
     }
 
     public override string[] get_tracks () {
@@ -177,6 +181,18 @@ public class SnapApp : App
         progress_changed ();
     }
 
+    private async void load_local_metadata (string name)
+    {
+        var client = new Snapd.Client ();
+        try {
+            local_snap = yield client.list_one_async (name, null);
+            changed ();
+        }
+        catch (Error e) {
+            warning ("Failed to load local information on %s: %s", name, e.message);
+        }
+    }
+
     private async void load_store_metadata (string name)
     {
         var client = new Snapd.Client ();
@@ -185,7 +201,7 @@ public class SnapApp : App
             var snaps = yield client.find_async (Snapd.FindFlags.MATCH_NAME, name, null, out suggested_currency);
             if (snaps.length == 0)
                 return;
-            this.store_snap = snaps[0];
+            store_snap = snaps[0];
             changed ();
         }
         catch (Error e) {

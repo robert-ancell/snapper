@@ -20,6 +20,7 @@ public class Snapper : Gtk.Application
     };
 
     private AppWindow window;
+    private App? selected_app;
 
     public Snapper ()
     {
@@ -27,10 +28,20 @@ public class Snapper : Gtk.Application
         register_session = true;
     }
 
+    public void show_snap (string name) {
+        selected_app = new SnapApp (name);
+    }
+
+    public void show_package (string package) {
+        // FIXME...
+    }
+
     public override void startup ()
     {
         base.startup ();
         window = new AppWindow ();
+        if (selected_app != null)
+            window.show_details (selected_app);
         add_window (window);
     }
 
@@ -54,7 +65,7 @@ public class Snapper : Gtk.Application
         Intl.textdomain (GETTEXT_PACKAGE);
 
         var c = new OptionContext (/* Arguments and description for --help text */
-                                   _("Snap package manager"));
+                                   _("[URL] — Package manager"));
         c.add_main_entries (options, GETTEXT_PACKAGE);
         c.add_group (Gtk.get_option_group (true));
         try
@@ -76,9 +87,25 @@ public class Snapper : Gtk.Application
             return Posix.EXIT_SUCCESS;
         }
 
-        Gtk.init (ref args);
-
         var app = new Snapper ();
+
+        if (args.length > 1) {
+            var url = args[1];
+            if (url.has_prefix ("snap://")) {
+                var name = url.substring ("snap://".length);
+                app.show_snap (name);
+            }
+            else if (url.has_prefix ("apt://")) {
+                var package = url.substring ("apt://".length);
+                app.show_package (package);
+            }
+            else {
+                stderr.printf (_("Unknown URL '%s'\n"), url);
+                return Posix.EXIT_FAILURE;
+            }
+        }
+
+        Gtk.init (ref args);
         return app.run ();
     }
 }
