@@ -16,13 +16,14 @@ public class AsyncImage : Gtk.Stack {
             if (url_ == value)
                 return;
             url_ = value;
-            visible_child_name = "default";
+            visible_child = default_image;
             load.begin ();
         }
     }
 
     private int width;
     private int height;
+    private Gtk.Image default_image;
     private Gtk.Image image;
 
     public AsyncImage (int width, int height, string default_icon_name) {
@@ -33,14 +34,14 @@ public class AsyncImage : Gtk.Stack {
 
         set_size_request (width, height);
 
-        var default_image = new Gtk.Image ();
+        default_image = new Gtk.Image ();
         default_image.visible = true;
         default_image.set_from_icon_name (default_icon_name, Gtk.IconSize.DIALOG);
-        add_named (default_image, "default");
+        add (default_image);
 
         image = new Gtk.Image ();
         image.visible = true;
-        add_named (image, "loaded");
+        add (image);
     }
     
     private async void load ()
@@ -56,7 +57,7 @@ public class AsyncImage : Gtk.Stack {
             try {
                 var pixbuf = new Gdk.Pixbuf.from_file_at_size (filename, width, height);
                 image.set_from_pixbuf (pixbuf);
-                visible_child_name = "loaded";
+                visible_child = image;
             }
             catch (Error e) {
                 warning ("Failed to load icon: %s", url);
@@ -72,7 +73,7 @@ public class AsyncImage : Gtk.Stack {
                 var stream = yield session.send_async (message);
                 var pixbuf = yield new Gdk.Pixbuf.from_stream_at_scale_async (stream, width, height, true);
                 image.set_from_pixbuf (pixbuf);
-                visible_child_name = "loaded";
+                visible_child = image;
             }
             catch (Error e) {
                 warning ("Failed to download icon: %s", url);
