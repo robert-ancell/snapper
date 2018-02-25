@@ -16,6 +16,7 @@ public class DetailsPage : Gtk.ScrolledWindow
     private Gtk.Label title_label;
     private Gtk.Label summary_label;
     private Gtk.Button install_button;
+    private Gtk.ProgressBar install_progress;
     private Gtk.ScrolledWindow screenshot_scroll;
     private Gtk.Label description_label;
     private Gtk.Box channel_box;
@@ -50,10 +51,17 @@ public class DetailsPage : Gtk.ScrolledWindow
         summary_label.visible = true;
         grid.attach (summary_label, 1, 1, 1, 1);
 
+        var install_box = new Gtk.Box (Gtk.Orientation.HORIZONTAL, 12);
+        install_box.visible = true;
+        grid.attach (install_box, 0, 2, 2, 1);
+
         install_button = new Gtk.Button.with_label (_("Install"));
         install_button.clicked.connect (() => { install_remove_app.begin (); });
         install_button.visible = true;
-        grid.attach (install_button, 0, 2, 1, 1);
+        install_box.pack_start (install_button, false, true, 0);
+
+        install_progress = new Gtk.ProgressBar ();
+        install_box.pack_start (install_progress, true, true, 0);
 
         screenshot_scroll = new Gtk.ScrolledWindow (null, null);
         screenshot_scroll.set_policy (Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.NEVER);
@@ -76,6 +84,7 @@ public class DetailsPage : Gtk.ScrolledWindow
             screenshot_scroll.remove (screenshot_scroll.get_children ().nth_data (0));
         screenshot_scroll.visible = false;
         selected_app.changed.connect (() => { refresh_selected_metadata (); }); // FIXME: Disconnect when changes
+        selected_app.progress_changed.connect (() => { install_progress.fraction = selected_app.progress; }); // FIXME: Disconnect when changes
         refresh_selected_metadata ();
     }
 
@@ -155,10 +164,17 @@ public class DetailsPage : Gtk.ScrolledWindow
     public async void install_remove_app ()
     {
         install_button.sensitive = false;
-        if (!selected_app.is_installed)
+        install_progress.visible = true;
+        if (!selected_app.is_installed) {
+            install_button.label = _("Installing…");
             yield selected_app.install ();
-        else
+        }
+        else {
+            install_button.label = _("Removing…");
             yield selected_app.remove ();
+        }
+        install_progress.visible = false;
         install_button.sensitive = true;
+        refresh_selected_metadata ();
     }
 }

@@ -53,10 +53,14 @@ public class PkApp : App
     public override bool is_installed {
         get { return package != null; }
     }
+    public override double progress {
+        get { return _progress; }
+    }
 
     private Pk.Package? package;
     private Pk.Details? details;
     private AppStream.Component component;
+    private double _progress = -1.0;
 
     public PkApp (Pk.Package? package, Pk.Details? details, AppStream.Component component)
     {
@@ -93,7 +97,7 @@ public class PkApp : App
         string[] ids = {};
         try {
             var filter = Pk.Bitfield.from_enums (Pk.Filter.NOT_INSTALLED, Pk.Filter.ARCH, Pk.Filter.NOT_SOURCE, Pk.Filter.NEWEST);
-            var results = yield task.resolve_async (filter, { component.get_pkgname () }, cancellable, (progress, type) => {});
+            var results = yield task.resolve_async (filter, { component.get_pkgname () }, cancellable, progress_cb);
             var packages = results.get_package_array ();
             for (var i = 0; i < packages.length; i++)
                 ids += packages[i].get_id ();
@@ -116,10 +120,18 @@ public class PkApp : App
         var task = new Pk.Task ();
         string[] ids = { component.get_pkgname () }; // FIXME: Id contains more than just pkgname
         try {
-            yield task.remove_packages_async (ids, true, true, cancellable, (progress, type) => {});
+            yield task.remove_packages_async (ids, true, true, cancellable, progress_cb);
         }
         catch (Error e) {
-            warning ("Failed to install %s: %s", component.get_pkgname (), e.message);
+            warning ("Failed to remove %s: %s", component.get_pkgname (), e.message);
+        }
+    }
+
+    private void progress_cb (Pk.Progress progress, Pk.ProgressType type)
+    {
+        if (type == Pk.ProgressType.PERCENTAGE) {
+            _progress = progress.percentage / 100.0;
+            progress_changed ();
         }
     }
 }

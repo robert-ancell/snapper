@@ -62,9 +62,13 @@ public class SnapApp : App
     public override bool is_installed {
         get { return local_snap != null; }
     }
+    public override double progress {
+        get { return _progress; }
+    }
 
     private Snapd.Snap? local_snap;
     private Snapd.Snap? store_snap;
+    private double _progress = -1.0;
 
     public SnapApp (Snapd.Snap? local_snap, Snapd.Snap? store_snap)
     {
@@ -128,7 +132,7 @@ public class SnapApp : App
     {
         var client = new Snapd.Client ();
         try {
-            yield client.install2_async (Snapd.InstallFlags.NONE, store_snap.name, null, null, () => {}, cancellable);
+            yield client.install2_async (Snapd.InstallFlags.NONE, store_snap.name, null, null, progress_cb, cancellable);
         }
         catch (Error e) {
             warning ("Failed to install %s: %s", store_snap.name, e.message);
@@ -149,7 +153,7 @@ public class SnapApp : App
     {
         var client = new Snapd.Client ();
         try {
-            yield client.remove_async (local_snap.name, () => {}, cancellable);
+            yield client.remove_async (local_snap.name, progress_cb, cancellable);
         }
         catch (Error e) {
             warning ("Failed to remove %s: %s", store_snap.name, e.message);
@@ -158,6 +162,19 @@ public class SnapApp : App
         local_snap = null;
 
         changed ();
+    }
+
+    private void progress_cb (Snapd.Client client, Snapd.Change change, void* deprecated)
+    {
+        var tasks = change.get_tasks ();
+        int64 progress_done = 0;
+        int64 progress_total = 0;
+        for (var i = 0; i < tasks.length; i++) {
+            progress_done += tasks[i].progress_done;
+            progress_total += tasks[i].progress_total;
+        }
+        _progress = (double) progress_done / progress_total;
+        progress_changed ();
     }
 
     private async void load_store_metadata (string name)

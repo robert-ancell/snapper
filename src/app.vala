@@ -18,8 +18,10 @@ public class App : Object
     public virtual string? icon_url { get { return ""; } }
     public virtual uint64 download_size { get { return 0; } }
     public virtual bool is_installed { get { return false; } }
+    public virtual double progress { get { return -1.0; } }
 
     public signal void changed ();
+    public signal void progress_changed ();
 
     public App ()
     {
