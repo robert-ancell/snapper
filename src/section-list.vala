@@ -16,7 +16,7 @@ public class SectionList : Gtk.Box
 
     public SectionList (string label)
     {
-        Object (orientation: Gtk.Orientation.VERTICAL);
+        Object (orientation: Gtk.Orientation.VERTICAL, spacing: 12);
 
         var title_label = new Gtk.Label (label);
         title_label.visible = true;
