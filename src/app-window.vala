@@ -15,20 +15,16 @@ public class AppWindow : Gtk.ApplicationWindow
     private Gtk.ToggleButton installed_button;
     private Gtk.ToggleButton updates_button;
     private Gtk.Button back_button;
-    private Gtk.Button search_button;
     private HomePage home_page;
     private InstalledPage installed_page;
     private UpdatesPage updates_page;
     private DetailsPage details_page;
-    private SearchPage search_page;
     private Cancellable? search_cancellable;
-    private Queue<string> page_stack;
+    private Gtk.Widget? back_page = null;
     private AppStream.Pool pool;
 
     public AppWindow ()
     {
-        page_stack = new Queue<string> ();
-
         set_size_request (800, 600);
 
         var header_bar = new Gtk.HeaderBar ();
@@ -60,13 +56,8 @@ public class AppWindow : Gtk.ApplicationWindow
         page_box.pack_start (updates_button, false, true, 0);
 
         back_button = new Gtk.Button.from_icon_name ("back");
-        back_button.clicked.connect (() => { stack.visible_child_name = page_stack.pop_head (); update_state (); });
+        back_button.clicked.connect (() => { stack.visible_child = back_page; back_page = null; update_state (); });
         header_bar.pack_start (back_button);
-
-        search_button = new Gtk.Button.from_icon_name ("search");
-        search_button.visible = true;
-        search_button.clicked.connect (() => { show_search (); });
-        header_bar.pack_end (search_button);
 
         stack = new Gtk.Stack ();
         stack.visible = true;
@@ -74,31 +65,25 @@ public class AppWindow : Gtk.ApplicationWindow
 
         home_page = new HomePage ();
         home_page.visible = true;
+        home_page.search.connect ((text) => { search (text); });
         home_page.select_app.connect ((app) => { show_details (app); });
-        stack.add_named (home_page, "home");
+        stack.add (home_page);
 
         installed_page = new InstalledPage ();
         installed_page.visible = true;
         installed_page.select_app.connect ((app) => { show_details (app); });
-        stack.add_named (installed_page, "installed");
+        stack.add (installed_page);
 
         updates_page = new UpdatesPage ();
         updates_page.visible = true;
         updates_page.select_app.connect ((app) => { show_details (app); });
-        stack.add_named (updates_page, "updates");
-
-        search_page = new SearchPage ();
-        search_page.visible = true;
-        search_page.select_app.connect ((app) => { show_details (app); });
-        search_page.search.connect ((text) => { search (text); });
-        stack.add_named (search_page, "search");
+        stack.add (updates_page);
 
         details_page = new DetailsPage ();
         details_page.visible = true;
-        stack.add_named (details_page, "details");
+        stack.add (details_page);
 
         load_installed.begin ();
-        load_sections.begin ();
         load_appstream.begin ();
     }
 
@@ -114,38 +99,6 @@ public class AppWindow : Gtk.ApplicationWindow
         }
         catch (Error e) {
             warning ("Failed to get installed snaps: %s", e.message);
-        }
-    }
-
-    private async void load_sections ()
-    {
-        var client = new Snapd.Client ();
-
-        string[] sections;
-        try {
-            sections = yield client.get_sections_async (null);
-        }
-        catch (Error e) {
-            warning ("Failed to get sections: %s", e.message);
-            return;
-        }
-
-        var section_lists = new HashTable<string, SectionList> (str_hash, str_equal);
-        foreach (var section_name in sections)
-            section_lists.insert (section_name, home_page.add_section (section_name));
-
-        foreach (var section_name in sections) {
-            try {
-                string suggested_currency;
-                var snaps = yield client.find_section_async (Snapd.FindFlags.NONE, section_name, null, null, out suggested_currency);
-                for (var i = 0; i < snaps.length; i++) {
-                    var app = new SnapApp (snaps[i].name, snaps[i], null);
-                    section_lists.lookup (section_name).add_app (app);
-                }
-            }
-            catch (Error e) {
-                warning ("Failed to get section %s: %s", section_name, e.message);
-            }
         }
     }
 
@@ -251,7 +204,7 @@ public class AppWindow : Gtk.ApplicationWindow
             search_cancellable.cancel ();
         search_cancellable = new Cancellable ();
 
-        search_page.clear ();
+        home_page.clear_search ();
         do_snapd_search.begin (text);
         do_appstream_search.begin (text);
     }
@@ -264,7 +217,7 @@ public class AppWindow : Gtk.ApplicationWindow
             var snaps = yield client.find_async (Snapd.FindFlags.NONE, text, search_cancellable, out suggested_currency);
             for (var i = 0; i < snaps.length; i++) {
                 var app = new SnapApp (snaps[i].name, null, snaps[i]);
-                search_page.add_app (app);
+                home_page.add_search_app (app);
             }
         }
         catch (Error e)
@@ -286,62 +239,53 @@ public class AppWindow : Gtk.ApplicationWindow
         for (var i = 0; i < components.length; i++) {
             var component = components[i];
             var app = new PkApp (null, null, component);
-            search_page.add_app (app);
+            home_page.add_search_app (app);
         }
     }
 
     private void show_home ()
     {
-        page_stack.clear ();
-        stack.visible_child_name = "home";
+        back_page = null;
+        stack.visible_child = home_page;
         update_state ();
     }
 
     private void show_installed ()
     {
-        page_stack.clear ();
-        stack.visible_child_name = "installed";
+        back_page = null;
+        stack.visible_child = installed_page;
         update_state ();
     }
 
     private void show_updates ()
     {
-        page_stack.clear ();
-        stack.visible_child_name = "updates";
+        back_page = null;
+        stack.visible_child = updates_page;
         update_state ();
     }
 
     public void show_details (App app)
     {
         details_page.set_app (app);
-        page_stack.push_head (stack.visible_child_name);
-        stack.visible_child_name = "details";
-        update_state ();
-    }
-
-    private void show_search ()
-    {
-        search_page.reset ();
-        page_stack.push_head (stack.visible_child_name);
-        stack.visible_child_name = "search";
+        back_page = stack.visible_child;
+        stack.visible_child = details_page;
         update_state ();
     }
 
     private void update_state ()
     {
-        back_button.visible = page_stack.length > 0;
-        search_button.visible = stack.visible_child_name == "home" || stack.visible_child_name == "installed";
-        if (stack.visible_child_name == "home") {
+        back_button.visible = back_page != null;
+        if (stack.visible_child == home_page) {
             home_button.active = true;
             installed_button.active = false;
             updates_button.active = false;
         }
-        if (stack.visible_child_name == "installed") {
+        if (stack.visible_child == installed_page) {
             home_button.active = false;
             installed_button.active = true;
             updates_button.active = false;
         }
-        if (stack.visible_child_name == "updates") {
+        if (stack.visible_child == updates_page) {
             home_button.active = false;
             installed_button.active = false;
             updates_button.active = true;

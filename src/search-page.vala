@@ -8,28 +8,15 @@
  * license.
  */
 
-public class SearchPage : Gtk.Box
+public class SearchPage : Gtk.ScrolledWindow
 {
     public signal void select_app (App app);
 
-    private Gtk.SearchEntry search_entry;
     private Gtk.ListBox app_list;
-
-    public signal void search (string text);
 
     public SearchPage ()
     {
-        Object (orientation: Gtk.Orientation.VERTICAL);
-
-        search_entry = new Gtk.SearchEntry ();
-        search_entry.visible = true;
-        search_entry.search_changed.connect (() => { search (search_entry.text); });
-        pack_start (search_entry, false, false, 0);
-
-        var search_scroll = new Gtk.ScrolledWindow (null, null);
-        search_scroll.visible = true;
-        search_scroll.set_policy (Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC);
-        pack_start (search_scroll, true, true, 0);
+        set_policy (Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC);
 
         app_list = new Gtk.ListBox ();
         app_list.visible = true;
@@ -37,12 +24,7 @@ public class SearchPage : Gtk.Box
         app_list.activate_on_single_click = true;
         app_list.selection_mode = Gtk.SelectionMode.NONE;
         app_list.row_activated.connect ((row) => { select_app (((AppRow) row).app); });
-        search_scroll.add (app_list);
-    }
-
-    public void reset ()
-    {
-        search_entry.grab_focus ();
+        add (app_list);
     }
 
     public void clear ()

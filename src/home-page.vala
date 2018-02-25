@@ -8,28 +8,63 @@
  * license.
  */
 
-public class HomePage : Gtk.ScrolledWindow
+public class HomePage : Gtk.Box
 {
     public signal void select_app (App app);
 
-    private Gtk.Box section_box;
+    private Gtk.SearchEntry search_entry;
+    private Gtk.Stack stack;
+    private PromotionPage promotion_page;
+    private SearchPage search_page;
+
+    public signal void search (string text);
 
     public HomePage ()
     {
-        set_policy (Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC);
+        Object (orientation: Gtk.Orientation.VERTICAL);
 
-        section_box = new Gtk.Box (Gtk.Orientation.VERTICAL, 12);
-        section_box.visible = true;
-        section_box.margin = 12;
-        add (section_box);
+        var search_bar = new Gtk.SearchBar ();
+        search_bar.visible = true;
+        search_bar.search_mode_enabled = true;
+        pack_start (search_bar, false, true, 0);
+
+        search_entry = new Gtk.SearchEntry ();
+        search_entry.visible = true;
+        search_entry.width_chars = 40;
+        search_entry.search_changed.connect (() => {
+            if (search_entry.text == "")
+                stack.visible_child = promotion_page;
+            else {
+                stack.visible_child = search_page;
+                search (search_entry.text);
+            }
+        });
+        search_bar.add (search_entry);
+
+        stack = new Gtk.Stack ();
+        stack.visible = true;
+        stack.transition_type = Gtk.StackTransitionType.CROSSFADE;
+        pack_start (stack, true, true, 0);
+
+        promotion_page = new PromotionPage ();
+        promotion_page.visible = true;
+        promotion_page.select_app.connect ((app) => select_app (app));
+        stack.add (promotion_page);
+
+        search_page = new SearchPage ();
+        search_page.visible = true;
+        search_page.margin = 12;
+        search_page.select_app.connect ((app) => select_app (app));
+        stack.add (search_page);
     }
 
-    public SectionList add_section (string name)
+    public void clear_search ()
     {
-        var section = new SectionList (name);
-        section.visible = true;
-        section.select_app.connect ((app) => { select_app (app); });
-        section_box.pack_start (section, false, true, 0);
-        return section;
+        search_page.clear ();
+    }
+
+    public void add_search_app (App app)
+    {
+        search_page.add_app (app);
     }
 }
