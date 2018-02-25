@@ -11,9 +11,9 @@
 public class AppWindow : Gtk.ApplicationWindow
 {
     private Gtk.Stack stack;
-    private Gtk.ToggleButton home_button;
-    private Gtk.ToggleButton installed_button;
-    private Gtk.ToggleButton updates_button;
+    private Gtk.RadioButton home_button;
+    private Gtk.RadioButton installed_button;
+    private Gtk.RadioButton updates_button;
     private Gtk.Button back_button;
     private HomePage home_page;
     private InstalledPage installed_page;
@@ -39,19 +39,22 @@ public class AppWindow : Gtk.ApplicationWindow
         page_box.get_style_context ().add_class (Gtk.STYLE_CLASS_LINKED);
         header_bar.set_custom_title (page_box);
 
-        home_button = new Gtk.ToggleButton.with_label ("Home");
+        home_button = new Gtk.RadioButton.with_label (null, "Home");
         home_button.visible = true;
+        home_button.set_mode (false);
         home_button.active = true;
         home_button.clicked.connect (() => { if (home_button.active) show_home (); });
         page_box.pack_start (home_button, false, true, 0);
 
-        installed_button = new Gtk.ToggleButton.with_label ("Installed");
+        installed_button = new Gtk.RadioButton.with_label (home_button.get_group (), "Installed");
         installed_button.visible = true;
+        installed_button.set_mode (false);
         installed_button.clicked.connect (() => { if (installed_button.active) show_installed (); });
         page_box.pack_start (installed_button, false, true, 0);
 
-        updates_button = new Gtk.ToggleButton.with_label ("Updates");
+        updates_button = new Gtk.RadioButton.with_label (installed_button.get_group (), "Updates");
         updates_button.visible = true;
+        updates_button.set_mode (false);
         updates_button.clicked.connect (() => { if (updates_button.active) show_updates (); });
         page_box.pack_start (updates_button, false, true, 0);
 
