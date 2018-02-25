@@ -23,7 +23,7 @@ public class UpdatesPage : Gtk.ScrolledWindow
         app_list.margin = 12;
         app_list.activate_on_single_click = true;
         app_list.selection_mode = Gtk.SelectionMode.NONE;
-        app_list.row_activated.connect ((row) => { select_app (((AppRow) row).app); });
+        app_list.row_activated.connect ((row) => { select_app (((AppUpdateRow) row).app); });
         add (app_list);
     }
 
