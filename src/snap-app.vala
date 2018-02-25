@@ -189,7 +189,8 @@ public class SnapApp : App
             changed ();
         }
         catch (Error e) {
-            warning ("Failed to load local information on %s: %s", name, e.message);
+            if (!(e is Snapd.Error.NOT_FOUND))
+                warning ("Failed to load local information on %s: %s", name, e.message);
         }
     }
 
