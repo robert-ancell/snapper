@@ -23,12 +23,19 @@ public class SnapApp : App
     public override string title {
         get {
             if (local_snap != null)
-                return local_snap.title;
+                return get_title (local_snap);
             else if (store_snap != null)
-                return store_snap.title;
+                return get_title (store_snap);
             else
                 return "";
         }
+    }
+    private unowned string get_title (Snapd.Snap snap)
+    {
+        if (snap.title != null)
+            return snap.title;
+        else
+            return snap.name;
     }
     public override string developer {
         get {
