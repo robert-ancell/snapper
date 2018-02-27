@@ -76,7 +76,7 @@ public class AsyncImage : Gtk.Stack {
                 visible_child = image;
             }
             catch (Error e) {
-                warning ("Failed to download icon: %s", url);
+                warning ("Failed to download icon from %s: %s", url, e.message);
             }
 
             return;
