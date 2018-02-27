@@ -19,6 +19,7 @@ public class App : Object
     public virtual uint64 download_size { get { return 0; } }
     public virtual bool is_installed { get { return false; } }
     public virtual double progress { get { return -1.0; } }
+    public virtual string? odrs_id { get { return null; } }
 
     public signal void changed ();
     public signal void progress_changed ();

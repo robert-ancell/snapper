@@ -20,6 +20,7 @@ public class DetailsPage : Gtk.ScrolledWindow
     private Gtk.ScrolledWindow screenshot_scroll;
     private Gtk.Label description_label;
     private Gtk.Box channel_box;
+    private Gtk.Box review_box;
     private App? selected_app;
 
     public DetailsPage ()
@@ -42,6 +43,7 @@ public class DetailsPage : Gtk.ScrolledWindow
         title_label = new Gtk.Label ("");
         title_label.visible = true;
         title_label.hexpand = true;
+        title_label.xalign = 0;
         var attributes = new Pango.AttrList ();
         attributes.insert (Pango.attr_scale_new (Pango.Scale.LARGE));
         title_label.attributes = attributes;
@@ -49,6 +51,7 @@ public class DetailsPage : Gtk.ScrolledWindow
 
         summary_label = new Gtk.Label ("");
         summary_label.visible = true;
+        summary_label.xalign = 0;
         grid.attach (summary_label, 1, 1, 1, 1);
 
         var install_box = new Gtk.Box (Gtk.Orientation.HORIZONTAL, 12);
@@ -70,11 +73,16 @@ public class DetailsPage : Gtk.ScrolledWindow
         description_label = new Gtk.Label ("");
         description_label.visible = true;
         description_label.wrap = true;
+        description_label.xalign = 0;
         grid.attach (description_label, 0, 5, 2, 1);
 
         channel_box = new Gtk.Box (Gtk.Orientation.VERTICAL, 0);
         channel_box.visible = true;
         grid.attach (channel_box, 0, 6, 2, 1);
+
+        review_box = new Gtk.Box (Gtk.Orientation.VERTICAL, 12);
+        review_box.visible = true;
+        grid.attach (review_box, 0, 7, 2, 1);
     }
 
     public void set_app (App app)
@@ -159,6 +167,10 @@ public class DetailsPage : Gtk.ScrolledWindow
                 }
             }
         }
+
+        // FIXME: Only once and only when have appropriate metadata
+        review_box.forall ((element) => review_box.remove (element));
+        load_reviews.begin (); // FIXME: Cancellable
     }
 
     public async void install_remove_app ()
@@ -176,5 +188,61 @@ public class DetailsPage : Gtk.ScrolledWindow
         install_progress.visible = false;
         install_button.sensitive = true;
         refresh_selected_metadata ();
+    }
+
+    public async void load_reviews ()
+    {
+        if (selected_app.odrs_id == null)
+            return;
+
+        var client = new ODRSClient ();
+        var reviews = yield client.get_reviews (selected_app.odrs_id, null, 10);
+        for (var i = 0; i < reviews.length; i++) {
+            var review = reviews[i];
+
+            var grid = new Gtk.Grid ();
+            grid.row_spacing = 6;
+            grid.column_spacing = 6;
+            grid.visible = true;
+
+            string stars;
+            if (review.rating > 90)
+                stars = "★★★★★";
+            else if (review.rating > 70)
+                stars = "★★★★☆";
+            else if (review.rating > 50)
+                stars = "★★★☆☆";
+            else if (review.rating > 30)
+                stars = "★★☆☆☆";
+            else if (review.rating > 10)
+                stars = "★☆☆☆☆☆";
+            else
+                stars = "☆☆☆☆☆☆";
+
+            var star_label = new Gtk.Label (stars);
+            star_label.visible = true;
+            grid.attach (star_label, 0, 0, 1, 1);
+
+            var summary_label = new Gtk.Label (review.summary);
+            summary_label.visible = true;
+            summary_label.hexpand = true;
+            summary_label.xalign = 0;
+            grid.attach (summary_label, 1, 0, 1, 1);
+
+            var author_label = new Gtk.Label (review.user_display);
+            author_label.visible = true;
+            author_label.hexpand = true;
+            author_label.xalign = 0;
+            grid.attach (author_label, 0, 1, 2, 1);
+
+            var description_label = new Gtk.Label (review.description);
+            description_label.visible = true;
+            description_label.expand = true;
+            description_label.wrap = true;
+            description_label.xalign = 0;
+            grid.attach (description_label, 0, 2, 2, 1);
+
+            review_box.pack_start (grid);
+        }
     }
 }

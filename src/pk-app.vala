@@ -56,6 +56,11 @@ public class PkApp : App
     public override double progress {
         get { return _progress; }
     }
+    public override string? odrs_id {
+        get {
+            return component.get_id ();
+        }
+    }
 
     private Pk.Package? package;
     private Pk.Details? details;
