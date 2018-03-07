@@ -55,6 +55,7 @@ parts:
       - intltool
       - libappstream-dev
       - appstream
+      - libfwupd-dev
       - libglib2.0-dev
       - libgtk-3-dev
       - libpackagekit-glib2-dev

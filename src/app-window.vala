@@ -88,6 +88,7 @@ public class AppWindow : Gtk.ApplicationWindow
 
         load_installed.begin ();
         load_appstream.begin ();
+        load_fwupd.begin ();
     }
 
     private async void load_installed ()
@@ -201,6 +202,24 @@ public class AppWindow : Gtk.ApplicationWindow
         return null;
     }
 
+    private async void load_fwupd (Cancellable? cancellable = null)
+    {
+        var client = new Fwupd.Client ();
+        try {
+            client.connect (cancellable);
+            var devices = client.get_devices ();
+            for (var i = 0; i < devices.length; i++) {
+                var app = new FwupdApp (devices[i]);
+                installed_page.add_app (app);
+            }
+        }
+        catch (Error e)
+        {
+            warning ("Failed to connect to fwupd: %s", e.message);
+            return;
+        }
+    }
+
     private void search (string text)
     {
         if (search_cancellable != null)
@@ -227,7 +246,7 @@ public class AppWindow : Gtk.ApplicationWindow
         {
             if (e is IOError.CANCELLED)
                 return;
-            warning ("Failed to search: %s\n", e.message);
+            warning ("Failed to search: %s", e.message);
         }
     }
 
