@@ -10,7 +10,6 @@
 
 public class App : Object
 {
-    public virtual string name { get { return ""; } }
     public virtual string title { get { return ""; } }
     public virtual string developer { get { return ""; } }
     public virtual string summary { get { return ""; } }

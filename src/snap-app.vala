@@ -10,16 +10,6 @@
 
 public class SnapApp : App
 {
-    public override string name {
-        get {
-            if (local_snap != null)
-                return local_snap.name;
-            else if (store_snap != null)
-                return store_snap.name;
-            else
-                return "";
-        }
-    }
     public override string title {
         get {
             if (local_snap != null)

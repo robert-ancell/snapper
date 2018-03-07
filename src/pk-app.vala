@@ -10,11 +10,6 @@
 
 public class PkApp : App
 {
-    public override string name {
-        get {
-            return component.get_pkgname ();
-        }
-    }
     public override string title {
         get {
             return component.get_name ();
