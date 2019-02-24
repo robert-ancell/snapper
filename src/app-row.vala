@@ -13,7 +13,7 @@ public class AppRow : Gtk.ListBoxRow
     public App app;
     private AsyncImage icon_image;
     private Gtk.Label title_label;
-    private Gtk.Label developer_label;
+    private Gtk.Label publisher_label;
 
     public AppRow (App app)
     {
@@ -41,10 +41,10 @@ public class AppRow : Gtk.ListBoxRow
         title_label.attributes = attributes;
         box.pack_start (title_label, false, false, 0);
 
-        developer_label = new Gtk.Label ("");
-        developer_label.visible = true;
-        developer_label.xalign = 0;
-        box.pack_start (developer_label, false, false, 0);
+        publisher_label = new Gtk.Label ("");
+        publisher_label.visible = true;
+        publisher_label.xalign = 0;
+        box.pack_start (publisher_label, false, false, 0);
 
         app.changed.connect (() => { refresh_metadata (); });
         refresh_metadata ();
@@ -53,7 +53,7 @@ public class AppRow : Gtk.ListBoxRow
     private void refresh_metadata ()
     {
         title_label.label = app.title;
-        developer_label.label = app.developer;
+        publisher_label.label = app.publisher;
         icon_image.url = app.icon_url;
     }
 }

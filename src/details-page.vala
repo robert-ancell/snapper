@@ -14,10 +14,12 @@ public class DetailsPage : Gtk.ScrolledWindow
 
     private AsyncImage icon_image;
     private Gtk.Label title_label;
-    private Gtk.Label summary_label;
+    private Gtk.Label publisher_label;
+    private Gtk.Label publisher_validated_image;
     private Gtk.Button install_button;
     private Gtk.ProgressBar install_progress;
     private Gtk.ScrolledWindow screenshot_scroll;
+    private Gtk.Label summary_label;
     private Gtk.Label description_label;
     private Gtk.Box channel_box;
     private Gtk.Box review_box;
@@ -45,14 +47,23 @@ public class DetailsPage : Gtk.ScrolledWindow
         title_label.hexpand = true;
         title_label.xalign = 0;
         var attributes = new Pango.AttrList ();
-        attributes.insert (Pango.attr_scale_new (Pango.Scale.LARGE));
+        attributes.insert (Pango.attr_scale_new (Pango.Scale.X_LARGE));
         title_label.attributes = attributes;
         grid.attach (title_label, 1, 0, 1, 1);
 
-        summary_label = new Gtk.Label ("");
-        summary_label.visible = true;
-        summary_label.xalign = 0;
-        grid.attach (summary_label, 1, 1, 1, 1);
+        var publisher_box = new Gtk.Box (Gtk.Orientation.HORIZONTAL, 0);
+        publisher_box.visible = true;
+        grid.attach (publisher_box, 1, 1, 1, 1);
+
+        publisher_label = new Gtk.Label ("");
+        publisher_label.visible = true;
+        publisher_label.hexpand = false;
+        publisher_label.xalign = 0;
+        publisher_box.add (publisher_label);
+
+        publisher_validated_image = new Gtk.Label ("✓");
+        publisher_validated_image.hexpand = false;
+        publisher_box.add (publisher_validated_image);
 
         var install_box = new Gtk.Box (Gtk.Orientation.HORIZONTAL, 12);
         install_box.visible = true;
@@ -70,19 +81,26 @@ public class DetailsPage : Gtk.ScrolledWindow
         screenshot_scroll.set_policy (Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.NEVER);
         grid.attach (screenshot_scroll, 0, 4, 2, 1);
 
+        summary_label = new Gtk.Label ("");
+        summary_label.visible = true;
+        summary_label.xalign = 0;
+        summary_label.attributes = new Pango.AttrList ();
+        summary_label.attributes.insert (Pango.attr_scale_new (Pango.Scale.LARGE));
+        grid.attach (summary_label, 0, 5, 2, 1);
+
         description_label = new Gtk.Label ("");
         description_label.visible = true;
         description_label.wrap = true;
         description_label.xalign = 0;
-        grid.attach (description_label, 0, 5, 2, 1);
+        grid.attach (description_label, 0, 6, 2, 1);
 
         channel_box = new Gtk.Box (Gtk.Orientation.VERTICAL, 0);
         channel_box.visible = true;
-        grid.attach (channel_box, 0, 6, 2, 1);
+        grid.attach (channel_box, 0, 7, 2, 1);
 
         review_box = new Gtk.Box (Gtk.Orientation.VERTICAL, 12);
         review_box.visible = true;
-        grid.attach (review_box, 0, 7, 2, 1);
+        grid.attach (review_box, 0, 8, 2, 1);
     }
 
     public void set_app (App app)
@@ -103,6 +121,11 @@ public class DetailsPage : Gtk.ScrolledWindow
         else
             install_button.label = _("Install");
         title_label.label = selected_app.title;
+        if (selected_app.publisher_id != "")
+            publisher_label.label = "by %s (%s)".printf (selected_app.publisher, selected_app.publisher_id);
+        else
+            publisher_label.label = "by %s".printf (selected_app.publisher);
+        publisher_validated_image.visible = selected_app.publisher_validated;
         summary_label.label = selected_app.summary;
         description_label.label = selected_app.description;
         icon_image.url = selected_app.icon_url;

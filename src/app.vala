@@ -11,7 +11,9 @@
 public class App : Object
 {
     public virtual string title { get { return ""; } }
-    public virtual string developer { get { return ""; } }
+    public virtual string publisher { get { return ""; } }
+    public virtual string publisher_id { get { return ""; } }
+    public virtual bool publisher_validated { get { return false; } }
     public virtual string summary { get { return ""; } }
     public virtual string description { get { return ""; } }
     public virtual string? icon_url { get { return ""; } }

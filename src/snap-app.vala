@@ -27,14 +27,34 @@ public class SnapApp : App
         else
             return snap.name;
     }
-    public override string developer {
+    public override string publisher {
         get {
             if (local_snap != null)
-                return local_snap.developer;
+                return local_snap.publisher_display_name;
             else if (store_snap != null)
-                return store_snap.developer;
+                return store_snap.publisher_display_name;
             else
                 return "";
+        }
+    }
+    public override string publisher_id {
+        get {
+            if (local_snap != null)
+                return local_snap.publisher_username;
+            else if (store_snap != null)
+                return store_snap.publisher_username;
+            else
+                return "";
+        }
+    }
+    public override bool publisher_validated {
+        get {
+            if (local_snap != null)
+                return local_snap.publisher_validation == Snapd.PublisherValidation.VERIFIED;
+            else if (store_snap != null)
+                return store_snap.publisher_validation == Snapd.PublisherValidation.VERIFIED;
+            else
+                return false;
         }
     }
     public override string summary {

@@ -15,7 +15,7 @@ public class FwupdApp : App
             return device.get_name ();
         }
     }
-    public override string developer {
+    public override string publisher {
         get {
             return device.get_vendor ();
         }

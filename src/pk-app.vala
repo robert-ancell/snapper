@@ -15,7 +15,7 @@ public class PkApp : App
             return component.get_name ();
         }
     }
-    public override string developer {
+    public override string publisher {
         get {
             return component.get_developer_name ();
         }
