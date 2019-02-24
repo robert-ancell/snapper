@@ -53,7 +53,7 @@ public class AppWindow : Gtk.ApplicationWindow
         page_box.pack_start (installed_button, false, true, 0);
 
         updates_button = new Gtk.RadioButton.with_label (installed_button.get_group (), "Updates");
-        updates_button.visible = true;
+        //updates_button.visible = true;
         updates_button.set_mode (false);
         updates_button.clicked.connect (() => { if (updates_button.active) show_updates (); });
         page_box.pack_start (updates_button, false, true, 0);
@@ -87,8 +87,8 @@ public class AppWindow : Gtk.ApplicationWindow
         stack.add (details_page);
 
         load_installed.begin ();
-        load_appstream.begin ();
-        load_fwupd.begin ();
+        //load_appstream.begin ();
+        //load_fwupd.begin ();
     }
 
     private async void load_installed ()
