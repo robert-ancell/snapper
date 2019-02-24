@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Snapper
+Comment=Install and remove snaps
+Keywords=
+Exec=snapper
+Icon=snapper
+Terminal=false
+Type=Application
+StartupNotify=true
+Categories=GNOME;GTK;
